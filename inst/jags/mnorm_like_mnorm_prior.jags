@@ -1,0 +1,9 @@
+model{
+  # Likelihood  -----------------------------------
+  y ~ dmnorm(theta[1:2], tau_L)
+
+  # Priors ---------------------------------------------------------------------
+  # Multivariate normal
+  theta ~ dmnorm(mu[1:2], tau_P)
+
+}
