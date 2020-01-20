@@ -10,21 +10,19 @@ normal_normal_conjugate = function(
   rho_P
 ){
 
-  # Likelihood covaraince and precision
-  sigma_L = matrix(c(sigma_L_11, rho_L * sqrt(sigma_L_11 * sigma_L_22),
-                     rho_L * sqrt(sigma_L_11 * sigma_L_22), sigma_L_22),
-                   nrow = 2)
+  # Likelihood covariance and precision ----------------------------------------
+  sigma_L = make_cov_matrix(var_1 = sigma_L_11,
+                            var_2 = sigma_L_22,
+                            rho = rho_L)
   tau_L = solve(sigma_L)
 
-  # Prior covariance and precision
-  # Likelihood covaraince and precision
-  sigma_P = matrix(c(sigma_P_11, rho_P * sqrt(sigma_P_11 * sigma_P_22),
-                     rho_P * sqrt(sigma_P_11 * sigma_P_22), sigma_P_22),
-                   nrow = 2)
-
+  # Prior covariance and precision ---------------------------------------------
+  sigma_P = make_cov_matrix(var_1 = sigma_P_11,
+                            var_2 = sigma_P_22,
+                            rho = rho_P)
   tau_P = solve(sigma_P)
 
-  # Posterior parameters ----------------------------------------
+  # Posterior parameters ------------------------------------------------------
   # Precision
   tau_post = tau_P + tau_L
   # Mean
