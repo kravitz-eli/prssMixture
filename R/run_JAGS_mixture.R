@@ -41,11 +41,7 @@ comp2_prior_params <- list(
   mu = log(c(1, 1)),
   sigma_1 = 10^2,
   sigma_2 = 10^2,
-<<<<<<< HEAD
   rho = 0,
-=======
-  rho = 0.5,
->>>>>>> 1d9be3216d4f7764133e90e29a08572e61519faf
   alpha = 1,
   beta = 1
 )
@@ -66,6 +62,17 @@ jags_results <- run_jags(
   iter = 1e5,
   burn = 1e3,
   chains = 1,
+  progress.bar = "text")
+
+# Run with prior on P
+data[["p_mix"]] = NULL
+jags_results_prior_p_mix <- run_jags(
+  model_file = "normal_mixture_prior_p",
+  data = data,
+  track_variable_names = c("theta", "ind", "weight"),
+  iter = 1e5,
+  burn = 1e3,
+  chains = 1,
   progress.bar = "text"
 )
 
@@ -77,12 +84,6 @@ jags_results_prior_p_mix <- run_jags(
   track_variable_names = c("theta", "ind", "weight"),
   iter = 1e5,
   burn = 1e3,
-<<<<<<< HEAD
-  chains = 2,
-
-  progress.bar = "text"
-)
-=======
   chains = 1,
 
   progress.bar = "text"
@@ -149,5 +150,4 @@ weights_post_means = map_dbl(weight_post, mean)
 ind_post_mean = map_dbl(ind_post, mean)
 theta1_post_mean = map_dbl(theta_1_post, mean)
 theta2_post_mean = map_dbl(theta_2_post, mean)
->>>>>>> 1d9be3216d4f7764133e90e29a08572e61519faf
 
