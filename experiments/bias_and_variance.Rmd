@@ -1,0 +1,100 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+Denote the observed log hazard ratio with $\mu_L$ and the number of events observed in Phase 2 as $n_L$
+
++ Likelihood $p(\mu_L | \theta ) = N(\theta, 4 / n_L)$ 
++ Prior $\theta \sim N( \mu_P, 4 / n_P)$
+
+Then the posterior is $N( \frac{n_L  \mu_L + n_P \mu_P}{n_L + n_P}, \frac{4}{n_L + n_P})$.
+
+
+If you use a noninformative prior with $\mu_L = 0$, your posterior variance is unchanged and your posterior mean is $\frac{n_L  \mu_L}{n_L + n_P} = \big( \frac{n_L}{n_L + n_P} \big) \mu_L$. The bias induced by the prior is $\frac{n_L}{n_L + n_P}$. There is valid flat prior. The least informative prior sets $n_P = 1$ because it's like "observing" only a single event. This corresponds to a $N(0, 4).$ Maybe the least informative is $n_P = 2$ because you need a two observations for a hazard ratio. This would be $N(0, 2)$.
+
+**Note**: A $N(0, 4)$ is actually really, really noninformation for log hazard. Most of the mass is between -2 and 2 on the log scale which translates to a hazard ratio of 0.14 to 7.4. If you saw either of these hazard ratios, you would have cured cancer.
+
+!! Distribution of hazards (not log!), looks too peaked at 0 for it to be uninformative. 
+```{r echo = FALSE}
+
+curve(dnorm(x, 0, sd = sqrt(4)), from = -6, to = 6, 
+      main = "Probability of Log Hazard Ratios",
+      xlab = "Hazard Ratio",
+      ylab = "Density",
+      lwd = 2)
+
+
+samples = rnorm(10000, 0, sqrt(4))
+
+hist(exp(samples))
+
+curve(
+  dlnorm(x, meanlog  = 1,
+         sdlog = sqrt(4)),
+  from = 0,
+  to = 4,
+  main = "Probability of Hazard Ratios (not log)",
+  xlab = "Hazard Ratio",
+  ylab = "Density",
+  lwd = 2
+)
+
+
+
+```
+
+
+Look at "influence" (bias of the observed likelihood) when you keep prior sample size fixed
+```{r}
+n_P = 30
+n_L = seq(1, 300)
+
+bias = n_L / (n_L + n_P)
+
+plot(x = n_L, y = bias,
+     type = "l",
+     main = "Bias as n_P fixed at 30, n_L increases",
+     xlab  = "n_L (Likelihood events)",
+     ylab = "bias of likelihood mean")
+```
+
+Look at "influence" (bias of the observed likelihood) when you fix likelihood sample size and increase prior sample size
+```{r}
+n_P = seq(1, 300) 
+n_L = 30
+
+bias = n_L / (n_P + n_L)
+
+plot(x = n_P, y = bias,
+     type = "l",
+     main = "Bias as n_L fixed at 30, n_P increases",
+     xlab  = "n_P (prior sample size)",
+     ylab = "bias of likelihood mean")
+```
+
+
+## Can we find a good balance of likelihood sample size and emperical sample size
+
+```{r}
+# a < b
+rate_n_P = function(n_L, a, b){
+  
+  (n_L^a + 3) / (n_L^b - 1)
+  
+  
+}
+
+curve(
+  rate_n_P(x, 8, 10), 
+  from = 0, 
+  to = 20,
+  xlab = "n_L (likelihood sample)",
+  ylab = "n_P (prior sample)"
+)
+
+
+```
+
