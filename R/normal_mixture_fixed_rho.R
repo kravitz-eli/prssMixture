@@ -9,8 +9,7 @@ model{
 
   # Mixture Structure  ------------------------------------------------------
   theta <- ind * component_1 + (1-ind) * component_2
-  ind ~ dbern(weight)
-  weight ~ dbeta(2, 2)
+  ind ~ dbern(p_mix)
 
   # Priors -------------------------------------------------------------------
   # First component in normal mixture --------------------------

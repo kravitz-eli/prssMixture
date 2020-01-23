@@ -22,11 +22,12 @@ run_jags <- function(
   progress.bar = "none"
 ) {
 
-  inits <- replicate(chains, jags_init(), simplify = FALSE)
+  # inits <- replicate(chains, jags_init(), simplify = FALSE)
   jags_model <- rjags::jags.model(
     get_model_file(model_file),
     data = data,
     n.chains = chains,
+    # inits = inits,
     n.adapt = burn,
     quiet = TRUE
   )
