@@ -1,0 +1,15 @@
+model{
+  # likelihood
+  y ~ dnorm(theta, prec_L)
+  prec_L <- inverse(sigma_L)
+
+  theta <- ind * comp1 + (1-ind) * comp2
+  ind ~ dbern(weight)
+
+  # Prior ------
+  comp1 ~ dnorm(theta_1, tau_1)
+  tau_1 <- inverse(sigma_1)
+
+  comp2 ~ dnorm(theta_2, tau_2)
+  tau_2 <- inverse(sigma_2)
+}

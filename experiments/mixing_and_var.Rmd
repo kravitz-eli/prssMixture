@@ -1,0 +1,74 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+This is an attempt to see at what value of the variance the mixing weights go wrong. 
+
+Set up initial parameters
+```{r}
+library(here)
+library(magrittr)
+library(rjags)
+source(here("R", "run_jags.R"))
+
+data <- list(
+  "y" = log(0.76),
+  "sigma_L" = 1 / 48,
+  "weight" = 0.5,
+  "theta_1" = log(0.50),
+  "theta_2"  = log(1),
+  "sigma_1" = NA, #These will change
+  "sigma_2" = NA # These will change
+)
+
+
+jags_results <- run_jags(
+  model_file = "univariate_normal_mixture",
+  data = data,
+  track_variable_names = c("theta", "ind"),
+  iter = 1e5,
+  burn = 1e3,
+  chains = 1,
+  progress.bar = "text")
+
+```
+
+
+```{r}
+# Variance to try
+var_seq <- c(
+  seq(0.1, 2, by = 0.1),
+  seq(10, 50, by = 10)
+)
+
+# Effective sample size to try
+ESS_seq = 4 / var_seq
+p_post = vector("numeric", length = length(var_seq))
+
+for(i in seq_along(var_seq)) {
+  
+  data[["sigma_1"]] = data[["sigma_2"]] = var_seq[[i]]
+  
+  jags_results <- run_jags(
+  model_file = "univariate_normal_mixture",
+  data = data,
+  track_variable_names = c("theta", "ind"),
+  iter = 1e5,
+  burn = 1e3,
+  chains = 1,
+  progress.bar = "text")
+  
+  
+  p_post[[i]] = colMeans(as.matrix(jags_results[, "ind"]))
+  
+}
+
+
+plot(x = ESS_seq, y = p_post)
+  
+  
+```
+

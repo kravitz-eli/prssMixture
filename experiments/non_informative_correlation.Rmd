@@ -1,0 +1,47 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+The arcsine distribution is a possible non-informative prior for $\rho$ if $\rho = 0$ is not okay. This would be assuming both variances are fixed, which I think is fine in a noninformative  prior. 
+
+```{r}
+arc_sine_dist <- function(x, a, b) {
+  
+  (pi * sqrt((x - a) * (b - x))) ^ -1
+}
+
+
+curve(
+  arc_sine_dist(x, -1, 1), 
+  from = -1, 
+  to = 1, 
+  lwd = 3,
+  main = "PDF of Arcine Prior for Correlation",
+  xlab = "rho",
+  ylab = "f(rho)"
+)
+```
+
+I can't find a closed form for the mean. I think it should be 0 so let's confirm. I manually inverted the CDF from wikipedia: https://en.wikipedia.org/wiki/Arcsine_distribution
+
+Not correct. Not sure why
+
+```{r}
+library(magrittr)
+
+inverse_arc_sin = function(q, a, b){
+  
+  # (b - a) * sin(pi / 2 * q)^2 + a
+  
+  (a^2 - a * b - sin(pi / 2 * q)^2) / (a - b)
+  
+}
+# See if plot of pdf looks reasonable
+curve(inverse_arc_sin(x, -1, 1), -1, 1, lwd = 3)
+
+
+```
+

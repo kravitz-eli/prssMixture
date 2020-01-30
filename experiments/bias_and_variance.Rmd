@@ -5,6 +5,13 @@ editor_options:
   chunk_output_type: inline
 ---
 
+```{r setup, echo = FALSE}
+library(purrr)
+# Load function to calculate posterior
+source(here::here("experiments", "closed_HR_post_univariate.R"))
+```
+
+
 Denote the observed log hazard ratio with $\mu_L$ and the number of events observed in Phase 2 as $n_L$
 
 + Likelihood $p(\mu_L | \theta ) = N(\theta, 4 / n_L)$ 
@@ -77,7 +84,7 @@ plot(x = n_P, y = bias,
 
 
 ## Can we find a good balance of likelihood sample size and emperical sample size
-
+!!Doesn't really work
 ```{r}
 # a < b
 rate_n_P = function(n_L, a, b){
@@ -98,3 +105,135 @@ curve(
 
 ```
 
+
+# Lmits to noninformative: Approaching power distribution
+
+My own conjecture: $\text{Prss} \leq \text{Power}$, unless there is a very compeling reason to think otherwise. 
+
+Let's say the Phase III study is power at what is observed in Phase II. It should't but pretend it is. Call this $\theta_1$
+
+The Frequentist power calculate can be thought of in a Bayesian way: Suppose $\theta ~ N(\theta_{1}, \frac{4}{n_{E3}})$, where $\theta_1$ is the assumed log hazard ratio under $H_1$ for which the Phase 3 trial is powered and $n_{E3}$ is the number of events planned for phase 3. $\text{Power}(\theta_1) = Pr(\theta < \Phi(0.025; 0, \frac{4}{n_{E3}})$  
+
+We can make a prior that forces the posterior to get close to this
++ Likelihood $p(\mu_L | \theta ) = N(\theta, 4 / n_{E2})$, where $\mu_L$ is the observed Phase II log hazard ratio, $n_{E2}$ are the number of events from phase 2
++ Prior: $\theta \sim N\{ 0, 4 / (n_{E3} - n_{E2}\}$
++ Posterior: $N( \mu_L * \frac{ n_{E2} }{ n_{E3} } , \frac{4}{n_{E3}})$
+
+This is *close* to the power function, expect the mean is different. It is biased downwards when the planned events in phase 3 sample are larger than in phase 2 -- $n_{E3} > n_{E2}$ -- which will generally always be the case.
+
+Run a simulation to see if I get power back out of this. EAST says that with 88 planned events, a log hazard ratio of $\log(0.5)$ has power around $0.90$ at $\alpha = 0.025$
+
+Start with frequentist power
+```{r}
+# Set constants
+theta_0 = log(1) # null
+theta_1 = log(0.5)  #alternative 
+n_P3 = 88 # phase 3 events 
+alpha = 0.025 # Type 1 error
+
+# Get the rejection region / critical value
+crit_val = qnorm(alpha,
+                 mean = theta_0,
+                 sd = sqrt(4 / n_P3))
+
+# Calculate power
+# probability a N(theta_1, sigma^2) < critical value
+pnorm(crit_val,
+      mean = theta_1,
+      sd = sqrt(4/88))
+```
+
+Check prior sample size theory. !! Doesn't work. Back to drawing board
+
+```{r}
+
+# Phase 2 info
+n_P2 <- 30
+HR_obs <- log(0.50)
+
+# Phase 3 info
+n_P3 <- 88
+crit_val <- qnorm(alpha,
+                  mean = theta_0,
+                  sd = sqrt(4 / n_P3)
+)
+
+# Prior info
+prior_mean <- 0
+n_prior <- n_P3 - n_P2
+
+# Calculate posterior
+post_params <- closed_HR_post(
+  data_N = n_P2,
+  data_mean = HR_obs,
+  prior_N = n_P3 - n_P2,
+  prior_mean = 0
+)
+
+post_mean <- post_params$post_mean # much smaller than I expected
+post_var <- post_params$post_var
+
+# PrSS from my idea
+pnorm(crit_val,
+      mean = post_mean,
+      sd = sqrt(post_var)
+)
+
+# Prss Simulation
+theta_samp <- rnorm(10000, post_mean, sqrt(post_var))
+mean(theta_samp < crit_val)
+```
+
+
+See how PrSS changes with prior sample size. This is more complicated than I initially thought.
+
+```{r echo = FALSE}
+prss_n_prior_change <- function(n_prior, n_P2, n_P3,
+                                HR_obs, theta_0 = 0, alpha = 0.025) {
+  crit_val <- qnorm(
+    alpha,
+    mean = theta_0,
+    sd = sqrt(4 / n_P3)
+  )
+  
+  # Calculate posterior
+  post_params <- closed_HR_post(
+    data_N = n_P2,
+    data_mean = HR_obs,
+    prior_N = n_prior,
+    prior_mean = 0
+  )
+  
+  post_mean <- post_params$post_mean # much smaller than I expected
+  post_var <- post_params$post_var
+  
+  # Prss Simulation
+  theta_samp <- rnorm(100000, post_mean, sqrt(post_var))
+  mean(theta_samp < crit_val)
+}
+
+n_P2 <- 40
+HR_obs <- log(0.5)
+n_P3 <- 88
+max_n_prior <- n_P3 - n_P2
+
+prss <- map_dbl(1:max_n_prior, 
+                ~prss_n_prior_change(n_prior = .x, 
+                                     n_P2 = n_P2,
+                                     n_P3 = n_P3, 
+                                     HR_obs = HR_obs)
+)
+
+
+plot(x = 1:max_n_prior,
+     y = prss, 
+     type = "l",
+     lwd = 3,
+     col = "blue",
+     xlab = "Posterior Sample Size",
+     ylab = "PrSS",
+     ylim = c(0, 1),
+     main = "PrSS as a function of Posterior Sample Size")
+abline(h = 0.9, lty=2, lwd = 3)
+
+```

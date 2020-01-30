@@ -1749,137 +1749,90 @@ summary {
 
 
 <!-- rnb-text-begin -->
+<div id="setting-prior-parameters-to-get-to-desired-posterior-parameters" class="section level1">
+<h1>Setting prior parameters to get to desired posterior parameters</h1>
+<p>This is an attempt to find the best parameters of the prior.</p>
+<p>My idea is that if Phase 3 is power at the observed hazard ratio from phase 2 <span class="math inline">\(\text{Prss} \in [0.50, \text{Power}]\)</span> where power refers to power at <span class="math inline">\(\mu_{L}\)</span>, the Phase 2 observed hazard ratio, and <span class="math inline">\(n_{E3}\)</span>, the Phase 3 sample size.</p>
+<p>Assume a normal prior, <span class="math inline">\(N(\mu_P, 4 / n_P)\)</span>, and observed likelihood <span class="math inline">\(N(\mu_L, 4 / n_L)\)</span> The posterior distribution is Normal with + Mean: <span class="math inline">\(\frac{n_L \mu_L + n_P \mu_P}{n_L + n_P}\)</span> + Variance: <span class="math inline">\(\frac{4}{n_L + n_P}\)</span></p>
+<p>What is the most informative set of priors? To me, this turns PrSS into power. Power for Phase 3 can be interpreted in a bayesian sense. <span class="math inline">\(\theta ~ N(\mu{1}, \frac{4}{n_{E3}})\)</span>, where <span class="math inline">\(\theta_1\)</span> is the assumed log hazard ratio under <span class="math inline">\(H_1\)</span> for which the Phase 3 trial is powered and <span class="math inline">\(n_{E3}\)</span> is the number of events planned for phase 3. <span class="math inline">\(\text{Power}(\theta_1) = Pr(\theta &lt; \Phi(0.025; 0, \frac{4}{n_{E3}})\)</span></p>
+<div id="optimization" class="section level2">
+<h2>Optimization</h2>
+<p>We can we find prior parameters that force the posterior parameters to be close to parameters power in power function above? We’ll assume we power at the observed Phase 2 HR. We can interpret this as an optimization problem: (On second thought this might now work) <strong>Minimize</strong>  - _L <strong>Subject to: </strong> <span class="math inline">\(n_P + n_L = n_{P3}\)</span></p>
+<p>An alternative to explore is:</p>
+<p><strong>Minimize</strong> <span class="math inline">\(PrSS - Power\)</span>$ <strong>Subject to: </strong> <span class="math inline">\(n_P \geq 1\)</span>, <span class="math inline">\(\mu \in [-\epsilon, \epsilon]\)</span> (posterior mean close to 0)</p>
+<p>Try the first one: !!Dumb. This isn’t optimization. This is a nonlinear equation</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Denote the observed log hazard ratio with <span class="math inline">\(\mu_L\)</span> and the number of events observed in Phase 2 as <span class="math inline">\(n_L\)</span></p>
-<ul>
-<li>Likelihood <span class="math inline">\(p(\mu_L | \theta ) = N(\theta, 4 / n_L)\)</span></li>
-<li>Prior <span class="math inline">\(\theta \sim N( \mu_P, 4 / n_P)\)</span></li>
-</ul>
-<p>Then the posterior is <span class="math inline">\(N( \frac{n_L \mu_L + n_P \mu_P}{n_L + n_P}, \frac{4}{n_L + n_P})\)</span>.</p>
-<p>If you use a noninformative prior with <span class="math inline">\(\mu_L = 0\)</span>, your posterior variance is unchanged and your posterior mean is <span class="math inline">\(\frac{n_L \mu_L}{n_L + n_P} = \big( \frac{n_L}{n_L + n_P} \big) \mu_L\)</span>. The bias induced by the prior is <span class="math inline">\(\frac{n_L}{n_L + n_P}\)</span>. There is valid flat prior. The least informative prior sets <span class="math inline">\(n_P = 1\)</span> because it’s like “observing” only a single event. This corresponds to a <span class="math inline">\(N(0, 4).\)</span> Maybe the least informative is <span class="math inline">\(n_P = 2\)</span> because you need a two observations for a hazard ratio. This would be <span class="math inline">\(N(0, 2)\)</span>.</p>
-<p><strong>Note</strong>: A <span class="math inline">\(N(0, 4)\)</span> is actually really, really noninformation for log hazard. Most of the mass is between -2 and 2 on the log scale which translates to a hazard ratio of 0.14 to 7.4. If you saw either of these hazard ratios, you would have cured cancer.</p>
-<p>!! Distribution of hazards (not log!), looks too peaked at 0 for it to be uninformative.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Look at “influence” (bias of the observed likelihood) when you keep prior sample size fixed</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubl9QID0gMzBcbm5fTCA9IHNlcSgxLCAzMDApXG5cbmJpYXMgPSBuX0wgLyAobl9MICsgbl9QKVxuXG5wbG90KHggPSBuX0wsIHkgPSBiaWFzLFxuICAgICB0eXBlID0gXCJsXCIsXG4gICAgIG1haW4gPSBcIkJpYXMgYXMgbl9QIGZpeGVkIGF0IDMwLCBuX0wgaW5jcmVhc2VzXCIsXG4gICAgIHhsYWIgID0gXCJuX0wgKExpa2VsaWhvb2QgZXZlbnRzKVwiLFxuICAgICB5bGFiID0gXCJiaWFzIG9mIGxpa2VsaWhvb2QgbWVhblwiKVxuYGBgIn0= -->
-<pre class="r"><code>n_P = 30
-n_L = seq(1, 300)
-
-bias = n_L / (n_L + n_P)
-
-plot(x = n_L, y = bias,
-     type = &quot;l&quot;,
-     main = &quot;Bias as n_P fixed at 30, n_L increases&quot;,
-     xlab  = &quot;n_L (Likelihood events)&quot;,
-     ylab = &quot;bias of likelihood mean&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Look at “influence” (bias of the observed likelihood) when you fix likelihood sample size and increase prior sample size</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubl9QID0gc2VxKDEsIDMwMCkgXG5uX0wgPSAzMFxuXG5iaWFzID0gbl9MIC8gKG5fUCArIG5fTClcblxucGxvdCh4ID0gbl9QLCB5ID0gYmlhcyxcbiAgICAgdHlwZSA9IFwibFwiLFxuICAgICBtYWluID0gXCJCaWFzIGFzIG5fTCBmaXhlZCBhdCAzMCwgbl9QIGluY3JlYXNlc1wiLFxuICAgICB4bGFiICA9IFwibl9QIChwcmlvciBzYW1wbGUgc2l6ZSlcIixcbiAgICAgeWxhYiA9IFwiYmlhcyBvZiBsaWtlbGlob29kIG1lYW5cIilcbmBgYCJ9 -->
-<pre class="r"><code>n_P = seq(1, 300) 
-n_L = 30
-
-bias = n_L / (n_P + n_L)
-
-plot(x = n_P, y = bias,
-     type = &quot;l&quot;,
-     main = &quot;Bias as n_L fixed at 30, n_P increases&quot;,
-     xlab  = &quot;n_P (prior sample size)&quot;,
-     ylab = &quot;bias of likelihood mean&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<div id="can-we-find-a-good-balance-of-likelihood-sample-size-and-emperical-sample-size" class="section level2">
-<h2>Can we find a good balance of likelihood sample size and emperical sample size</h2>
-<p>!!Doesn’t really work</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBhIDwgYlxucmF0ZV9uX1AgPSBmdW5jdGlvbihuX0wsIGEsIGIpe1xuICBcbiAgKG5fTF5hICsgMykgLyAobl9MXmIgLSAxKVxuICBcbiAgXG59XG5cbmN1cnZlKFxuICByYXRlX25fUCh4LCA4LCAxMCksIFxuICBmcm9tID0gMCwgXG4gIHRvID0gMjAsXG4gIHhsYWIgPSBcIm5fTCAobGlrZWxpaG9vZCBzYW1wbGUpXCIsXG4gIHlsYWIgPSBcIm5fUCAocHJpb3Igc2FtcGxlKVwiXG4pXG5cblxuYGBgIn0= -->
-<pre class="r"><code># a &lt; b
-rate_n_P = function(n_L, a, b){
-  
-  (n_L^a + 3) / (n_L^b - 1)
-  
-  
-}
-
-curve(
-  rate_n_P(x, 8, 10), 
-  from = 0, 
-  to = 20,
-  xlab = &quot;n_L (likelihood sample)&quot;,
-  ylab = &quot;n_P (prior sample)&quot;
-)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuKG5fUCAqIG11X1AgKyBuX0wgKyBtdV9MKSAvIChuX1AgKyBuX0wpXG5cbmBgYCJ9 -->
+<pre class="r"><code>(n_P * mu_P + n_L + mu_L) / (n_P + n_L)
 </code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="lmits-to-noninformative-approaching-power-distribution" class="section level1">
-<h1>Lmits to noninformative: Approaching power distribution</h1>
-<p>My own conjecture: <span class="math inline">\(\text{Prss} \leq \text{Power}\)</span>, unless there is a very compeling reason to think otherwise.</p>
-<p>Let’s say the Phase III study is power at what is observed in Phase II. It should’t but pretend it is. Call this <span class="math inline">\(\theta_1\)</span></p>
-<p>The Frequentist power calculate can be thought of in a Bayesian way: Suppose <span class="math inline">\(\theta ~ N(\theta_{1}, \frac{4}{n_{E3}})\)</span>, where <span class="math inline">\(\theta_1\)</span> is the assumed log hazard ratio under <span class="math inline">\(H_1\)</span> for which the Phase 3 trial is powered and <span class="math inline">\(n_{E3}\)</span> is the number of events planned for phase 3. <span class="math inline">\(\text{Power}(\theta_1) = Pr(\theta &lt; \Phi(0.025; 0, \frac{4}{n_{E3}})\)</span></p>
-<p>We can make a prior that forces the posterior to get close to this + Likelihood <span class="math inline">\(p(\mu_L | \theta ) = N(\theta, 4 / n_{E2})\)</span>, where <span class="math inline">\(\mu_L\)</span> is the observed Phase II log hazard ratio, <span class="math inline">\(n_{E2}\)</span> are the number of events from phase 2 + Prior: <span class="math inline">\(\theta \sim N\{ 0, 4 / (n_{E3} - n_{E2}\}\)</span> + Posterior: <span class="math inline">\(N( \mu_L * \frac{ n_{E2} }{ n_{E3} } , \frac{4}{n_{E3}})\)</span></p>
-<p>This is <em>close</em> to the power function, expect the mean is different. It is biased downwards when the planned events in phase 3 sample are larger than in phase 2 – <span class="math inline">\(n_{E3} &gt; n_{E2}\)</span> – which will generally always be the case.</p>
-<p>Run a simulation to see if I get power back out of this. EAST says that with 88 planned events, a log hazard ratio of <span class="math inline">\(\log(0.5)\)</span> has power around <span class="math inline">\(0.90\)</span> at <span class="math inline">\(\alpha = 0.025\)</span></p>
-<p>Start with frequentist power</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBTZXQgY29uc3RhbnRzXG50aGV0YV8wID0gbG9nKDEpICMgbnVsbFxudGhldGFfMSA9IGxvZygwLjUpICAjYWx0ZXJuYXRpdmUgXG5uX1AzID0gODggIyBwaGFzZSAzIGV2ZW50cyBcbmFscGhhID0gMC4wMjUgIyBUeXBlIDEgZXJyb3JcblxuIyBHZXQgdGhlIHJlamVjdGlvbiByZWdpb24gLyBjcml0aWNhbCB2YWx1ZVxuY3JpdF92YWwgPSBxbm9ybShhbHBoYSxcbiAgICAgICAgICAgICAgICAgbWVhbiA9IHRoZXRhXzAsXG4gICAgICAgICAgICAgICAgIHNkID0gc3FydCg0IC8gbl9QMykpXG5cbiMgQ2FsY3VsYXRlIHBvd2VyXG4jIHByb2JhYmlsaXR5IGEgTih0aGV0YV8xLCBzaWdtYV4yKSA8IGNyaXRpY2FsIHZhbHVlXG5wbm9ybShjcml0X3ZhbCxcbiAgICAgIG1lYW4gPSB0aGV0YV8xLFxuICAgICAgc2QgPSBzcXJ0KDQvODgpKVxuYGBgIn0= -->
-<pre class="r"><code># Set constants
-theta_0 = log(1) # null
-theta_1 = log(0.5)  #alternative 
-n_P3 = 88 # phase 3 events 
-alpha = 0.025 # Type 1 error
-
-# Get the rejection region / critical value
-crit_val = qnorm(alpha,
-                 mean = theta_0,
-                 sd = sqrt(4 / n_P3))
-
-# Calculate power
-# probability a N(theta_1, sigma^2) &lt; critical value
-pnorm(crit_val,
-      mean = theta_1,
-      sd = sqrt(4/88))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Check prior sample size theory. !! Doesn’t work. Back to drawing board</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBQclNTIGZyb20gbXkgaWRlYVxucG5vcm0oY3JpdF92YWwsXG4gIG1lYW4gPSBwb3N0X21lYW4sXG4gIHNkID0gc3FydChwb3N0X3ZhcilcbilcblxuYGBgIn0= -->
-<pre class="r"><code># PrSS from my idea
-pnorm(crit_val,
-  mean = post_mean,
-  sd = sqrt(post_var)
-)
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDAuMTk3MjEzMVxuIn0= -->
-<pre><code>[1] 0.1972131</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIC0wLjY5MDU0N1xuIn0= -->
+<pre><code>[1] -0.690547</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<p>See how PrSS changes with prior sample size. This is more complicated than I initially thought.</p>
+<p>I think I get it: If you want PrSS to match power, you push <span class="math inline">\(n_{prior}\)</span> to <span class="math inline">\(n_{P3} - n_{P2}\)</span> <strong>and</strong> push <span class="math inline">\(\mu_p\)</span> to negative numbers (-infinity?)</p>
+<p>Try these values with Prss</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBDbG9zZWQgZm9ybSB3aXRoIG5vcm1hbFxucG5vcm0oY3JpdF92YWwsXG4gICAgICBwb3N0X21lYW4sXG4gICAgICBzZCA9IHNxcnQocG9zdF92YXIpKVxuXG5gYGAifQ== -->
+<pre class="r"><code># Closed form with normal
+pnorm(crit_val,
+      post_mean,
+      sd = sqrt(post_var))
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDAuOTk5OTk5NFxuIn0= -->
+<pre><code>[1] 0.9999994</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="try-with-rootsolving" class="section level2">
+<h2>Try with rootsolving</h2>
+<p>This should give a posterior that is approximately the same as the Phase III sampling distribution at the value the study is powered at</p>
+<p><strong>Solve</strong>: <span class="math inline">\(\frac{n_L \mu_L + n_P \mu_P}{n_L + n_P} = \mu_L\)</span> <strong>Subject to: </strong> <span class="math inline">\(n_P + n_L = n_{P3}\)</span></p>
+<p>You can change what you set the equation equal to if you want to power things differently.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucm9vdFxuXG5gYGAifQ== -->
+<pre class="r"><code>root
+</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiJHJvb3RcblsxXSAtMC4zNTg4OTFcblxuJGYucm9vdFxuWzFdIC0yLjk5NzYwMmUtMTVcblxuJGl0ZXJcblsxXSAyXG5cbiRpbml0Lml0XG5bMV0gTkFcblxuJGVzdGltLnByZWNcblsxXSAwLjAwNVxuIn0= -->
+<pre><code>$root
+[1] -0.358891
+
+$f.root
+[1] -2.997602e-15
+
+$iter
+[1] 2
+
+$init.it
+[1] NA
+
+$estim.prec
+[1] 0.005</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+</div>
+<div id="make-prior-sample-size-depend-on-likelihood-sample-size" class="section level1">
+<h1>Make prior sample size depend on likelihood sample size</h1>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-plot-begin eyJjb25kaXRpb25zIjpbXSwiaGVpZ2h0Ijo0MzIuNjMyOSwic2l6ZV9iZWhhdmlvciI6MCwid2lkdGgiOjcwMH0= -->
+<p><img src="data:image/png;base64,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" /></p>
+<!-- rnb-plot-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCmVkaXRvcl9vcHRpb25zOiANCiAgY2h1bmtfb3V0cHV0X3R5cGU6IGlubGluZQ0KLS0tDQoNCmBgYHtyIHNldHVwLCBlY2hvID0gRkFMU0V9DQpsaWJyYXJ5KHB1cnJyKQ0KIyBMb2FkIGZ1bmN0aW9uIHRvIGNhbGN1bGF0ZSBwb3N0ZXJpb3INCnNvdXJjZShoZXJlOjpoZXJlKCJleHBlcmltZW50cyIsICJjbG9zZWRfSFJfcG9zdF91bml2YXJpYXRlLlIiKSkNCmBgYA0KDQoNCkRlbm90ZSB0aGUgb2JzZXJ2ZWQgbG9nIGhhemFyZCByYXRpbyB3aXRoICRcbXVfTCQgYW5kIHRoZSBudW1iZXIgb2YgZXZlbnRzIG9ic2VydmVkIGluIFBoYXNlIDIgYXMgJG5fTCQNCg0KKyBMaWtlbGlob29kICRwKFxtdV9MIHwgXHRoZXRhICkgPSBOKFx0aGV0YSwgNCAvIG5fTCkkIA0KKyBQcmlvciAkXHRoZXRhIFxzaW0gTiggXG11X1AsIDQgLyBuX1ApJA0KDQpUaGVuIHRoZSBwb3N0ZXJpb3IgaXMgJE4oIFxmcmFje25fTCAgXG11X0wgKyBuX1AgXG11X1B9e25fTCArIG5fUH0sIFxmcmFjezR9e25fTCArIG5fUH0pJC4NCg0KDQpJZiB5b3UgdXNlIGEgbm9uaW5mb3JtYXRpdmUgcHJpb3Igd2l0aCAkXG11X0wgPSAwJCwgeW91ciBwb3N0ZXJpb3IgdmFyaWFuY2UgaXMgdW5jaGFuZ2VkIGFuZCB5b3VyIHBvc3RlcmlvciBtZWFuIGlzICRcZnJhY3tuX0wgIFxtdV9MfXtuX0wgKyBuX1B9ID0gXGJpZyggXGZyYWN7bl9MfXtuX0wgKyBuX1B9IFxiaWcpIFxtdV9MJC4gVGhlIGJpYXMgaW5kdWNlZCBieSB0aGUgcHJpb3IgaXMgJFxmcmFje25fTH17bl9MICsgbl9QfSQuIFRoZXJlIGlzIHZhbGlkIGZsYXQgcHJpb3IuIFRoZSBsZWFzdCBpbmZvcm1hdGl2ZSBwcmlvciBzZXRzICRuX1AgPSAxJCBiZWNhdXNlIGl0J3MgbGlrZSAib2JzZXJ2aW5nIiBvbmx5IGEgc2luZ2xlIGV2ZW50LiBUaGlzIGNvcnJlc3BvbmRzIHRvIGEgJE4oMCwgNCkuJCBNYXliZSB0aGUgbGVhc3QgaW5mb3JtYXRpdmUgaXMgJG5fUCA9IDIkIGJlY2F1c2UgeW91IG5lZWQgYSB0d28gb2JzZXJ2YXRpb25zIGZvciBhIGhhemFyZCByYXRpby4gVGhpcyB3b3VsZCBiZSAkTigwLCAyKSQuDQoNCioqTm90ZSoqOiBBICROKDAsIDQpJCBpcyBhY3R1YWxseSByZWFsbHksIHJlYWxseSBub25pbmZvcm1hdGlvbiBmb3IgbG9nIGhhemFyZC4gTW9zdCBvZiB0aGUgbWFzcyBpcyBiZXR3ZWVuIC0yIGFuZCAyIG9uIHRoZSBsb2cgc2NhbGUgd2hpY2ggdHJhbnNsYXRlcyB0byBhIGhhemFyZCByYXRpbyBvZiAwLjE0IHRvIDcuNC4gSWYgeW91IHNhdyBlaXRoZXIgb2YgdGhlc2UgaGF6YXJkIHJhdGlvcywgeW91IHdvdWxkIGhhdmUgY3VyZWQgY2FuY2VyLg0KDQohISBEaXN0cmlidXRpb24gb2YgaGF6YXJkcyAobm90IGxvZyEpLCBsb29rcyB0b28gcGVha2VkIGF0IDAgZm9yIGl0IHRvIGJlIHVuaW5mb3JtYXRpdmUuIA0KYGBge3IgZWNobyA9IEZBTFNFfQ0KDQpjdXJ2ZShkbm9ybSh4LCAwLCBzZCA9IHNxcnQoNCkpLCBmcm9tID0gLTYsIHRvID0gNiwgDQogICAgICBtYWluID0gIlByb2JhYmlsaXR5IG9mIExvZyBIYXphcmQgUmF0aW9zIiwNCiAgICAgIHhsYWIgPSAiSGF6YXJkIFJhdGlvIiwNCiAgICAgIHlsYWIgPSAiRGVuc2l0eSIsDQogICAgICBsd2QgPSAyKQ0KDQoNCnNhbXBsZXMgPSBybm9ybSgxMDAwMCwgMCwgc3FydCg0KSkNCg0KaGlzdChleHAoc2FtcGxlcykpDQoNCmN1cnZlKA0KICBkbG5vcm0oeCwgbWVhbmxvZyAgPSAxLA0KICAgICAgICAgc2Rsb2cgPSBzcXJ0KDQpKSwNCiAgZnJvbSA9IDAsDQogIHRvID0gNCwNCiAgbWFpbiA9ICJQcm9iYWJpbGl0eSBvZiBIYXphcmQgUmF0aW9zIChub3QgbG9nKSIsDQogIHhsYWIgPSAiSGF6YXJkIFJhdGlvIiwNCiAgeWxhYiA9ICJEZW5zaXR5IiwNCiAgbHdkID0gMg0KKQ0KDQoNCg0KYGBgDQoNCg0KTG9vayBhdCAiaW5mbHVlbmNlIiAoYmlhcyBvZiB0aGUgb2JzZXJ2ZWQgbGlrZWxpaG9vZCkgd2hlbiB5b3Uga2VlcCBwcmlvciBzYW1wbGUgc2l6ZSBmaXhlZA0KYGBge3J9DQpuX1AgPSAzMA0Kbl9MID0gc2VxKDEsIDMwMCkNCg0KYmlhcyA9IG5fTCAvIChuX0wgKyBuX1ApDQoNCnBsb3QoeCA9IG5fTCwgeSA9IGJpYXMsDQogICAgIHR5cGUgPSAibCIsDQogICAgIG1haW4gPSAiQmlhcyBhcyBuX1AgZml4ZWQgYXQgMzAsIG5fTCBpbmNyZWFzZXMiLA0KICAgICB4bGFiICA9ICJuX0wgKExpa2VsaWhvb2QgZXZlbnRzKSIsDQogICAgIHlsYWIgPSAiYmlhcyBvZiBsaWtlbGlob29kIG1lYW4iKQ0KYGBgDQoNCkxvb2sgYXQgImluZmx1ZW5jZSIgKGJpYXMgb2YgdGhlIG9ic2VydmVkIGxpa2VsaWhvb2QpIHdoZW4geW91IGZpeCBsaWtlbGlob29kIHNhbXBsZSBzaXplIGFuZCBpbmNyZWFzZSBwcmlvciBzYW1wbGUgc2l6ZQ0KYGBge3J9DQpuX1AgPSBzZXEoMSwgMzAwKSANCm5fTCA9IDMwDQoNCmJpYXMgPSBuX0wgLyAobl9QICsgbl9MKQ0KDQpwbG90KHggPSBuX1AsIHkgPSBiaWFzLA0KICAgICB0eXBlID0gImwiLA0KICAgICBtYWluID0gIkJpYXMgYXMgbl9MIGZpeGVkIGF0IDMwLCBuX1AgaW5jcmVhc2VzIiwNCiAgICAgeGxhYiAgPSAibl9QIChwcmlvciBzYW1wbGUgc2l6ZSkiLA0KICAgICB5bGFiID0gImJpYXMgb2YgbGlrZWxpaG9vZCBtZWFuIikNCmBgYA0KDQoNCiMjIENhbiB3ZSBmaW5kIGEgZ29vZCBiYWxhbmNlIG9mIGxpa2VsaWhvb2Qgc2FtcGxlIHNpemUgYW5kIGVtcGVyaWNhbCBzYW1wbGUgc2l6ZQ0KISFEb2Vzbid0IHJlYWxseSB3b3JrDQpgYGB7cn0NCiMgYSA8IGINCnJhdGVfbl9QID0gZnVuY3Rpb24obl9MLCBhLCBiKXsNCiAgDQogIChuX0xeYSArIDMpIC8gKG5fTF5iIC0gMSkNCiAgDQogIA0KfQ0KDQpjdXJ2ZSgNCiAgcmF0ZV9uX1AoeCwgOCwgMTApLCANCiAgZnJvbSA9IDAsIA0KICB0byA9IDIwLA0KICB4bGFiID0gIm5fTCAobGlrZWxpaG9vZCBzYW1wbGUpIiwNCiAgeWxhYiA9ICJuX1AgKHByaW9yIHNhbXBsZSkiDQopDQoNCg0KYGBgDQoNCg0KIyBMbWl0cyB0byBub25pbmZvcm1hdGl2ZTogQXBwcm9hY2hpbmcgcG93ZXIgZGlzdHJpYnV0aW9uDQoNCk15IG93biBjb25qZWN0dXJlOiAkXHRleHR7UHJzc30gXGxlcSBcdGV4dHtQb3dlcn0kLCB1bmxlc3MgdGhlcmUgaXMgYSB2ZXJ5IGNvbXBlbGluZyByZWFzb24gdG8gdGhpbmsgb3RoZXJ3aXNlLiANCg0KTGV0J3Mgc2F5IHRoZSBQaGFzZSBJSUkgc3R1ZHkgaXMgcG93ZXIgYXQgd2hhdCBpcyBvYnNlcnZlZCBpbiBQaGFzZSBJSS4gSXQgc2hvdWxkJ3QgYnV0IHByZXRlbmQgaXQgaXMuIENhbGwgdGhpcyAkXHRoZXRhXzEkDQoNClRoZSBGcmVxdWVudGlzdCBwb3dlciBjYWxjdWxhdGUgY2FuIGJlIHRob3VnaHQgb2YgaW4gYSBCYXllc2lhbiB3YXk6IFN1cHBvc2UgJFx0aGV0YSB+IE4oXHRoZXRhX3sxfSwgXGZyYWN7NH17bl97RTN9fSkkLCB3aGVyZSAkXHRoZXRhXzEkIGlzIHRoZSBhc3N1bWVkIGxvZyBoYXphcmQgcmF0aW8gdW5kZXIgJEhfMSQgZm9yIHdoaWNoIHRoZSBQaGFzZSAzIHRyaWFsIGlzIHBvd2VyZWQgYW5kICRuX3tFM30kIGlzIHRoZSBudW1iZXIgb2YgZXZlbnRzIHBsYW5uZWQgZm9yIHBoYXNlIDMuICRcdGV4dHtQb3dlcn0oXHRoZXRhXzEpID0gUHIoXHRoZXRhIDwgXFBoaSgwLjAyNTsgMCwgXGZyYWN7NH17bl97RTN9fSkkICANCg0KV2UgY2FuIG1ha2UgYSBwcmlvciB0aGF0IGZvcmNlcyB0aGUgcG9zdGVyaW9yIHRvIGdldCBjbG9zZSB0byB0aGlzDQorIExpa2VsaWhvb2QgJHAoXG11X0wgfCBcdGhldGEgKSA9IE4oXHRoZXRhLCA0IC8gbl97RTJ9KSQsIHdoZXJlICRcbXVfTCQgaXMgdGhlIG9ic2VydmVkIFBoYXNlIElJIGxvZyBoYXphcmQgcmF0aW8sICRuX3tFMn0kIGFyZSB0aGUgbnVtYmVyIG9mIGV2ZW50cyBmcm9tIHBoYXNlIDINCisgUHJpb3I6ICRcdGhldGEgXHNpbSBOXHsgMCwgNCAvIChuX3tFM30gLSBuX3tFMn1cfSQNCisgUG9zdGVyaW9yOiAkTiggXG11X0wgKiBcZnJhY3sgbl97RTJ9IH17IG5fe0UzfSB9ICwgXGZyYWN7NH17bl97RTN9fSkkDQoNClRoaXMgaXMgKmNsb3NlKiB0byB0aGUgcG93ZXIgZnVuY3Rpb24sIGV4cGVjdCB0aGUgbWVhbiBpcyBkaWZmZXJlbnQuIEl0IGlzIGJpYXNlZCBkb3dud2FyZHMgd2hlbiB0aGUgcGxhbm5lZCBldmVudHMgaW4gcGhhc2UgMyBzYW1wbGUgYXJlIGxhcmdlciB0aGFuIGluIHBoYXNlIDIgLS0gJG5fe0UzfSA+IG5fe0UyfSQgLS0gd2hpY2ggd2lsbCBnZW5lcmFsbHkgYWx3YXlzIGJlIHRoZSBjYXNlLg0KDQpSdW4gYSBzaW11bGF0aW9uIHRvIHNlZSBpZiBJIGdldCBwb3dlciBiYWNrIG91dCBvZiB0aGlzLiBFQVNUIHNheXMgdGhhdCB3aXRoIDg4IHBsYW5uZWQgZXZlbnRzLCBhIGxvZyBoYXphcmQgcmF0aW8gb2YgJFxsb2coMC41KSQgaGFzIHBvd2VyIGFyb3VuZCAkMC45MCQgYXQgJFxhbHBoYSA9IDAuMDI1JA0KDQpTdGFydCB3aXRoIGZyZXF1ZW50aXN0IHBvd2VyDQpgYGB7cn0NCiMgU2V0IGNvbnN0YW50cw0KdGhldGFfMCA9IGxvZygxKSAjIG51bGwNCnRoZXRhXzEgPSBsb2coMC41KSAgI2FsdGVybmF0aXZlIA0Kbl9QMyA9IDg4ICMgcGhhc2UgMyBldmVudHMgDQphbHBoYSA9IDAuMDI1ICMgVHlwZSAxIGVycm9yDQoNCiMgR2V0IHRoZSByZWplY3Rpb24gcmVnaW9uIC8gY3JpdGljYWwgdmFsdWUNCmNyaXRfdmFsID0gcW5vcm0oYWxwaGEsDQogICAgICAgICAgICAgICAgIG1lYW4gPSB0aGV0YV8wLA0KICAgICAgICAgICAgICAgICBzZCA9IHNxcnQoNCAvIG5fUDMpKQ0KDQojIENhbGN1bGF0ZSBwb3dlcg0KIyBwcm9iYWJpbGl0eSBhIE4odGhldGFfMSwgc2lnbWFeMikgPCBjcml0aWNhbCB2YWx1ZQ0KcG5vcm0oY3JpdF92YWwsDQogICAgICBtZWFuID0gdGhldGFfMSwNCiAgICAgIHNkID0gc3FydCg0Lzg4KSkNCmBgYA0KDQpDaGVjayBwcmlvciBzYW1wbGUgc2l6ZSB0aGVvcnkuICEhIERvZXNuJ3Qgd29yay4gQmFjayB0byBkcmF3aW5nIGJvYXJkDQoNCmBgYHtyfQ0KDQojIFBoYXNlIDIgaW5mbw0Kbl9QMiA8LSAzMA0KSFJfb2JzIDwtIGxvZygwLjUwKQ0KDQojIFBoYXNlIDMgaW5mbw0Kbl9QMyA8LSA4OA0KY3JpdF92YWwgPC0gcW5vcm0oYWxwaGEsDQogICAgICAgICAgICAgICAgICBtZWFuID0gdGhldGFfMCwNCiAgICAgICAgICAgICAgICAgIHNkID0gc3FydCg0IC8gbl9QMykNCikNCg0KIyBQcmlvciBpbmZvDQpwcmlvcl9tZWFuIDwtIDANCm5fcHJpb3IgPC0gbl9QMyAtIG5fUDINCg0KIyBDYWxjdWxhdGUgcG9zdGVyaW9yDQpwb3N0X3BhcmFtcyA8LSBjbG9zZWRfSFJfcG9zdCgNCiAgZGF0YV9OID0gbl9QMiwNCiAgZGF0YV9tZWFuID0gSFJfb2JzLA0KICBwcmlvcl9OID0gbl9QMyAtIG5fUDIsDQogIHByaW9yX21lYW4gPSAwDQopDQoNCnBvc3RfbWVhbiA8LSBwb3N0X3BhcmFtcyRwb3N0X21lYW4gIyBtdWNoIHNtYWxsZXIgdGhhbiBJIGV4cGVjdGVkDQpwb3N0X3ZhciA8LSBwb3N0X3BhcmFtcyRwb3N0X3Zhcg0KDQojIFByU1MgZnJvbSBteSBpZGVhDQpwbm9ybShjcml0X3ZhbCwNCiAgICAgIG1lYW4gPSBwb3N0X21lYW4sDQogICAgICBzZCA9IHNxcnQocG9zdF92YXIpDQopDQoNCiMgUHJzcyBTaW11bGF0aW9uDQp0aGV0YV9zYW1wIDwtIHJub3JtKDEwMDAwLCBwb3N0X21lYW4sIHNxcnQocG9zdF92YXIpKQ0KbWVhbih0aGV0YV9zYW1wIDwgY3JpdF92YWwpDQpgYGANCg0KDQpTZWUgaG93IFByU1MgY2hhbmdlcyB3aXRoIHByaW9yIHNhbXBsZSBzaXplLiBUaGlzIGlzIG1vcmUgY29tcGxpY2F0ZWQgdGhhbiBJIGluaXRpYWxseSB0aG91Z2h0Lg0KDQpgYGB7ciBlY2hvID0gRkFMU0V9DQpwcnNzX25fcHJpb3JfY2hhbmdlIDwtIGZ1bmN0aW9uKG5fcHJpb3IsIG5fUDIsIG5fUDMsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIEhSX29icywgdGhldGFfMCA9IDAsIGFscGhhID0gMC4wMjUpIHsNCiAgY3JpdF92YWwgPC0gcW5vcm0oDQogICAgYWxwaGEsDQogICAgbWVhbiA9IHRoZXRhXzAsDQogICAgc2QgPSBzcXJ0KDQgLyBuX1AzKQ0KICApDQogIA0KICAjIENhbGN1bGF0ZSBwb3N0ZXJpb3INCiAgcG9zdF9wYXJhbXMgPC0gY2xvc2VkX0hSX3Bvc3QoDQogICAgZGF0YV9OID0gbl9QMiwNCiAgICBkYXRhX21lYW4gPSBIUl9vYnMsDQogICAgcHJpb3JfTiA9IG5fcHJpb3IsDQogICAgcHJpb3JfbWVhbiA9IDANCiAgKQ0KICANCiAgcG9zdF9tZWFuIDwtIHBvc3RfcGFyYW1zJHBvc3RfbWVhbiAjIG11Y2ggc21hbGxlciB0aGFuIEkgZXhwZWN0ZWQNCiAgcG9zdF92YXIgPC0gcG9zdF9wYXJhbXMkcG9zdF92YXINCiAgDQogICMgUHJzcyBTaW11bGF0aW9uDQogIHRoZXRhX3NhbXAgPC0gcm5vcm0oMTAwMDAwLCBwb3N0X21lYW4sIHNxcnQocG9zdF92YXIpKQ0KICBtZWFuKHRoZXRhX3NhbXAgPCBjcml0X3ZhbCkNCn0NCg0Kbl9QMiA8LSA0MA0KSFJfb2JzIDwtIGxvZygwLjUpDQpuX1AzIDwtIDg4DQptYXhfbl9wcmlvciA8LSBuX1AzIC0gbl9QMg0KDQpwcnNzIDwtIG1hcF9kYmwoMTptYXhfbl9wcmlvciwgDQogICAgICAgICAgICAgICAgfnByc3Nfbl9wcmlvcl9jaGFuZ2Uobl9wcmlvciA9IC54LCANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBuX1AyID0gbl9QMiwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBuX1AzID0gbl9QMywgDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSFJfb2JzID0gSFJfb2JzKQ0KKQ0KDQoNCnBsb3QoeCA9IDE6bWF4X25fcHJpb3IsDQogICAgIHkgPSBwcnNzLCANCiAgICAgdHlwZSA9ICJsIiwNCiAgICAgbHdkID0gMywNCiAgICAgY29sID0gImJsdWUiLA0KICAgICB4bGFiID0gIlBvc3RlcmlvciBTYW1wbGUgU2l6ZSIsDQogICAgIHlsYWIgPSAiUHJTUyIsDQogICAgIHlsaW0gPSBjKDAsIDEpLA0KICAgICBtYWluID0gIlByU1MgYXMgYSBmdW5jdGlvbiBvZiBQb3N0ZXJpb3IgU2FtcGxlIFNpemUiKQ0KYWJsaW5lKGggPSAwLjksIGx0eT0yLCBsd2QgPSAzKQ0KDQpgYGANCg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCmVkaXRvcl9vcHRpb25zOiANCiAgY2h1bmtfb3V0cHV0X3R5cGU6IGlubGluZQ0KLS0tDQojIFNldHRpbmcgcHJpb3IgcGFyYW1ldGVycyB0byBnZXQgdG8gZGVzaXJlZCBwb3N0ZXJpb3IgcGFyYW1ldGVycw0KDQpUaGlzIGlzIGFuIGF0dGVtcHQgdG8gZmluZCB0aGUgYmVzdCBwYXJhbWV0ZXJzIG9mIHRoZSBwcmlvci4NCg0KTXkgaWRlYSBpcyB0aGF0IGlmICBQaGFzZSAzIGlzIHBvd2VyIGF0IHRoZSBvYnNlcnZlZCBoYXphcmQgcmF0aW8gZnJvbSBwaGFzZSAyICRcdGV4dHtQcnNzfSBcaW4gWzAuNTAsIFx0ZXh0e1Bvd2VyfV0kIHdoZXJlIHBvd2VyIHJlZmVycyB0byBwb3dlciBhdCAkXG11X3tMfSQsIHRoZSBQaGFzZSAyIG9ic2VydmVkIGhhemFyZCByYXRpbywgYW5kICRuX3tFM30kLCB0aGUgUGhhc2UgMyBzYW1wbGUgc2l6ZS4NCg0KQXNzdW1lIGEgbm9ybWFsIHByaW9yLCAkTihcbXVfUCwgNCAvIG5fUCkkLCBhbmQgb2JzZXJ2ZWQgbGlrZWxpaG9vZCAkTihcbXVfTCwgNCAvIG5fTCkkIFRoZSBwb3N0ZXJpb3IgZGlzdHJpYnV0aW9uIGlzIE5vcm1hbCB3aXRoDQorIE1lYW46ICRcZnJhY3tuX0wgIFxtdV9MICsgbl9QIFxtdV9QfXtuX0wgKyAgbl9QfSQNCisgVmFyaWFuY2U6ICRcZnJhY3s0fXtuX0wgKyBuX1B9JA0KDQpXaGF0IGlzIHRoZSBtb3N0IGluZm9ybWF0aXZlIHNldCBvZiBwcmlvcnM/IFRvIG1lLCB0aGlzIHR1cm5zIFByU1MgaW50byBwb3dlci4gUG93ZXIgZm9yIFBoYXNlIDMgY2FuIGJlIGludGVycHJldGVkIGluIGEgYmF5ZXNpYW4gc2Vuc2UuICRcdGhldGEgfiBOKFxtdXsxfSwgXGZyYWN7NH17bl97RTN9fSkkLCB3aGVyZSAkXHRoZXRhXzEkIGlzIHRoZSBhc3N1bWVkIGxvZyBoYXphcmQgcmF0aW8gdW5kZXIgJEhfMSQgZm9yIHdoaWNoIHRoZSBQaGFzZSAzIHRyaWFsIGlzIHBvd2VyZWQgYW5kICRuX3tFM30kIGlzIHRoZSBudW1iZXIgb2YgZXZlbnRzIHBsYW5uZWQgZm9yIHBoYXNlIDMuICRcdGV4dHtQb3dlcn0oXHRoZXRhXzEpID0gUHIoXHRoZXRhIDwgXFBoaSgwLjAyNTsgMCwgXGZyYWN7NH17bl97RTN9fSkkDQoNCg0KIyMgT3B0aW1pemF0aW9uDQoNCldlIGNhbiB3ZSBmaW5kIHByaW9yIHBhcmFtZXRlcnMgdGhhdCBmb3JjZSB0aGUgcG9zdGVyaW9yIHBhcmFtZXRlcnMgdG8gYmUgY2xvc2UgdG8gcGFyYW1ldGVycyBwb3dlciBpbiBwb3dlciBmdW5jdGlvbiBhYm92ZT8gV2UnbGwgYXNzdW1lIHdlIHBvd2VyIGF0IHRoZSBvYnNlcnZlZCBQaGFzZSAyIEhSLiBXZSBjYW4gaW50ZXJwcmV0IHRoaXMgYXMgYW4gb3B0aW1pemF0aW9uIHByb2JsZW06DQooT24gc2Vjb25kIHRob3VnaHQgdGhpcyBtaWdodCBub3cgd29yaykNCioqTWluaW1pemUqKiBcZnJhY3tuX0wgIFxtdV9MICsgbl9QIFxtdV9QfXtuX0wgKyBuX1B9IC0gXG11X0wNCioqU3ViamVjdCB0bzogKiogJG5fUCArIG5fTCA9IG5fe1AzfSQgIA0KDQoNCkFuIGFsdGVybmF0aXZlIHRvIGV4cGxvcmUgaXM6DQoNCioqTWluaW1pemUqKiAkUHJTUyAtIFBvd2VyJCQNCioqU3ViamVjdCB0bzogKiogJG5fUCBcZ2VxIDEkLCAkXG11IFxpbiBbLVxlcHNpbG9uLCBcZXBzaWxvbl0kIChwb3N0ZXJpb3IgbWVhbiBjbG9zZSB0byAwKQ0KDQpUcnkgdGhlIGZpcnN0IG9uZTogISFEdW1iLiBUaGlzIGlzbid0IG9wdGltaXphdGlvbi4gVGhpcyBpcyBhIG5vbmxpbmVhciBlcXVhdGlvbg0KYGBge3J9DQpsaWJyYXJ5KG5sb3B0cikgIyBMb29rIHVwIHZpZ25ldHRlIGZvciBoZWxwDQoNCiMgU2V0IHBoYXNlIElJIGFuZCBwaGFzZSBJSUkgcGFyYW1ldGVycw0KbXVfTCA8LSBsb2coMC41KQ0Kbl9MIDwtIDQwDQpuX1AzIDwtIDg4DQoNCiMgZnVuY3Rpb24gdG8gbWluaW1pemUNCmV2YWxfZjAgPC0gZnVuY3Rpb24obXVfUCwgbl9QLCBtdV9MLCBuX0wsIG11X3Bvd2VyKSB7DQogIGFicygobl9QICogbXVfUCArIG5fTCArIG11X0wpIC8gKG5fUCArIG5fTCkgLSBtdV9wb3dlcikNCn0NCg0KIyBlcXVhbGl0eSBjb250YWludHMNCmV2YWxfaCA8LSBmdW5jdGlvbihuX1AsIG5fTCwgbl9QMykgew0KICBuX1AzIC0gKG5fUCArIG5fTCkNCn0NCg0KIyBSdW4gb3B0aW1pemF0aW9uIA0Kb3B0cyA8LSBsaXN0KA0KICAiYWxnb3JpdGhtIj0gIk5MT1BUX0dOX0lTUkVTIiwNCiAgInh0b2xfcmVsIiA9IDEuMGUtOCwNCiAgImZ0b2xfYWJzIiA9IDAuMDUsDQogICJtYXhldmFsIiA9IDFlNCwNCiAgInRvbF9jb25zdHJhaW50c19lcSIgPSAxZS0zDQopDQoNCmYwX3dyYXBwZXIgPSBmdW5jdGlvbih4LCBtdV9MLCBuX0wsIG11X3Bvd2VyLCBuX1AzKXsNCiAgZXZhbF9mMChtdV9QID0geFsxXSwgbl9QID0geFsyXSwgbXVfTCA9IG11X0wsIG5fTCA9IG5fTCwgbXVfcG93ZXIgPSBtdV9wb3dlcikNCiAgDQogIA0KICANCn0NCg0KaF93cmFwcGVyID0gZnVuY3Rpb24oeCwgbXVfTCwgbl9MLCBtdV9wb3dlciwgbl9QMyl7DQogIGVxX2NvbnN0ciA9IGV2YWxfaChuX1AgPSB4WzJdLCBuX0wgPSBuX0wsIG5fUDMgPSBuX1AzKQ0KICANCiAgIyBtYWtlIGl0IGEgc29mdCB0aHJlc2hvbGQNCiAgIyBpZiB0aGUgc2FtcGxlIHNpemUgbGVzcyB0aGFuIDUgZGlmZmVyZW50LCB3ZSdyZSBva2F5DQogIGlmZWxzZShhYnMoZXFfY29uc3RyKSA8IDUsICB5ZXMgPSAwLCBubyA9IDEpDQogIA0KfQ0KDQpyZXMgPC0gbmxvcHRyKA0KICBjKDAsIDEpLA0KICBldmFsX2YgPSBmMF93cmFwcGVyLA0KICBldmFsX2dfZXEgPSBoX3dyYXBwZXIsDQogIGxiID0gYygtMTAwLCAxKSwNCiAgdWIgPSBjKDEwMCwgIG5fUDMgLSBuX0wpLA0KICBvcHRzID0gb3B0cywNCiAgbXVfTCA9IG11X0wsDQogIG5fTCA9IG5fTCwNCiAgbl9QMyA9IG5fUDMsDQogIG11X3Bvd2VyID0gbXVfTA0KKQ0KDQoNCm9wdF9uX3AgPSBmbG9vcihyZXMkc29sdXRpb25bMl0pDQpvcHRfbl9tdSA9IHJlcyRzb2x1dGlvblsxXQ0KDQpgYGANCg0KSSB0aGluayBJIGdldCBpdDogSWYgeW91IHdhbnQgUHJTUyB0byBtYXRjaCBwb3dlciwgeW91IHB1c2ggJG5fe3ByaW9yfSQgdG8gJG5fe1AzfSAtIG5fe1AyfSQgKiphbmQqKiBwdXNoICRcbXVfcCQgdG8gbmVnYXRpdmUgbnVtYmVycyAoLWluZmluaXR5PykNCg0KDQpUcnkgdGhlc2UgdmFsdWVzIHdpdGggUHJzcw0KDQpgYGB7cn0NCnNvdXJjZShoZXJlOjpoZXJlKCJleHBlcmltZW50cyIsICJjbG9zZWRfSFJfcG9zdF91bml2YXJpYXRlLlIiKSkNCg0KY3JpdF92YWwgPC0gcW5vcm0oDQogIDAuMDI1LA0KICBtZWFuID0gMCwNCiAgc2QgPSBzcXJ0KDQgLyBuX1AzKQ0KKQ0KDQojIEdldCBwb3N0ZXJpb3IgcGFyYW1ldGVycw0KcG9zdF9wYXJhbXMgPSBjbG9zZWRfSFJfcG9zdCgNCiAgcHJpb3JfTiA9IG9wdF9uX3AsDQogIHByaW9yX21lYW4gPSBvcHRfbl9tdSwNCiAgZGF0YV9OID0gbl9MLA0KICBkYXRhX21lYW4gPSBsb2coMC41MCkNCikNCg0KcG9zdF9tZWFuIDwtIHBvc3RfcGFyYW1zJHBvc3RfbWVhbiAjIG11Y2ggc21hbGxlciB0aGFuIEkgZXhwZWN0ZWQNCnBvc3RfdmFyIDwtIHBvc3RfcGFyYW1zJHBvc3RfdmFyDQoNCiMgQ2xvc2VkIGZvcm0gd2l0aCBub3JtYWwNCnBub3JtKGNyaXRfdmFsLA0KICAgICAgcG9zdF9tZWFuLA0KICAgICAgc2QgPSBzcXJ0KHBvc3RfdmFyKSkNCg0KIyBQcnNzIFNpbXVsYXRpb24NCnRoZXRhX3NhbXAgPC0gcm5vcm0oMTAwMDAwLCBwb3N0X21lYW4sIHNxcnQocG9zdF92YXIpKQ0KbWVhbih0aGV0YV9zYW1wIDwgY3JpdF92YWwpDQpgYGANCg0KIyMgVHJ5IHdpdGggcm9vdHNvbHZpbmcNCg0KVGhpcyBzaG91bGQgZ2l2ZSBhIHBvc3RlcmlvciB0aGF0IGlzIGFwcHJveGltYXRlbHkgdGhlIHNhbWUgYXMgdGhlIFBoYXNlIElJSSBzYW1wbGluZyBkaXN0cmlidXRpb24gYXQgdGhlIHZhbHVlIHRoZSBzdHVkeSBpcyBwb3dlcmVkIGF0DQoNCioqU29sdmUqKjogJFxmcmFje25fTCAgXG11X0wgKyBuX1AgXG11X1B9e25fTCArIG5fUH0gID0gIFxtdV9MJA0KKipTdWJqZWN0IHRvOiAqKiAkbl9QICsgbl9MID0gbl97UDN9JCAgDQoNCllvdSBjYW4gY2hhbmdlIHdoYXQgeW91IHNldCB0aGUgZXF1YXRpb24gZXF1YWwgdG8gaWYgeW91IHdhbnQgdG8gcG93ZXIgdGhpbmdzIGRpZmZlcmVudGx5Lg0KDQpgYGB7cn0NCmRhdGFfbWVhbiA8LSBsb2coMC41KQ0KZGF0YV9OIDwtIDQwDQpwaGFzZTNfTiA8LSA4OA0KcHJpb3JfTiA9IHBoYXNlM19OIC0gZGF0YV9ODQoNCg0KIyBmaW5kX3ByaW9yX211ID0gZnVuY3Rpb24obXVfUCwgbl9QLCBuX0wsIG11X0wsIHRhcmdldF9tdSl7DQojICAgKG5fUCAqIG11X1AgKyBuX0wgKyBtdV9MKSAvIChuX1AgKyBuX0wpIC0gdGFyZ2V0X211DQojIH0NCg0KZmluZF9wcmlvcl9tdSA9IGZ1bmN0aW9uKHByaW9yX21lYW4sIHByaW9yX04sICBkYXRhX04sIGRhdGFfbWVhbiwgdGFyZ2V0KXsNCiAgKHByaW9yX04gKiBwcmlvcl9tZWFuICsgZGF0YV9OICogZGF0YV9tZWFuKSAvIChwcmlvcl9OICsgZGF0YV9OKSAtIHRhcmdldA0KfQ0KDQpyb290ID0gdW5pcm9vdCgNCiAgZmluZF9wcmlvcl9tdSwNCiAgaW50ZXJ2YWwgPSBjKC0xMDAsIDEwMCksDQogIHRvbCA9IDAuMDEsDQogIHByaW9yX04gPSBwcmlvcl9OLA0KICBkYXRhX04gPSBkYXRhX04sDQogIGRhdGFfbWVhbiA9IGRhdGFfbWVhbiwNCiAgdGFyZ2V0ID0gbG9nKDAuNSkNCikNCg0KcHJpb3JfbWVhbiA9IHJvb3Qkcm9vdA0KDQoNCnBvc3RfcGFyYW1zID0gY2xvc2VkX0hSX3Bvc3QoDQogIHByaW9yX04gPSBwcmlvcl9OLA0KICBwcmlvcl9tZWFuID0gcHJpb3JfbWVhbiwNCiAgZGF0YV9OID0gZGF0YV9OLA0KICBkYXRhX21lYW4gPSBkYXRhX21lYW4NCikNCg0KcG9zdF9tZWFuID0gcG9zdF9wYXJhbXMkcG9zdF9tZWFuDQpwb3N0X3ZhciA9IHBvc3RfcGFyYW1zJHBvc3RfdmFyDQoNCiMgR2V0IHNhbXBsaW5nIGRpc3RyaWJ1dGlvbiB1bmRlciBIMSBvdXQgb2YgdGhlIGNvZGUgYmVsb3cNCmNyaXRfdmFsIDwtIHFub3JtKA0KICAwLjAyNSwNCiAgbWVhbiA9IDAsDQogIHNkID0gc3FydCg0IC8gcGhhc2UzX04pDQopDQoNCg0KDQoNCg0KDQoNCmBgYA0KDQoNCiMgTWFrZSBwcmlvciBzYW1wbGUgc2l6ZSBkZXBlbmQgb24gbGlrZWxpaG9vZCBzYW1wbGUgc2l6ZQ0KDQpgYGB7cn0NCg0KcHJpb3JfTl9hc19saWtlbGlob29kX04gPSBmdW5jdGlvbihuX0ksIG5fTCl7DQogIA0KICANCiAgd2VpZ2h0ID0gbl9MXigxLzIpIC8gKG5fTF4oMS8yKSArIDEpDQogIA0KICB3ZWlnaHQgKiBuX0kgKyAoMSAtIHdlaWdodCkNCiAgDQp9DQoNCg0KZGF0YV9OIDwtIDQwDQpwaGFzZTNfTiA8LSA4OA0KcHJpb3JfSSA9IHBoYXNlM19OIC0gZGF0YV9ODQoNCmRhdGFfTF9zZXEgPSBzZXEoMToyMDApDQpwcmlvcl9OX2FzX2xpa2VsaWhvb2RfTihuX0kgPSBwcmlvcl9JLCBuX0wgPSBkYXRhX0xfc2VxKSAlPiUgDQogIHBsb3QoeCA9IGRhdGFfTF9zZXEsIHkgPSAuLCB5bGFiID0gIlByaW9yIFNhbXBsZSBTaXplIiwgeGxhYiA9ICJFdmVudHMgaW4gTGlrZWxpaG9vZCIgLA0KICAgICAgIHR5cGUgPSAibCIpDQoNCmBgYA0KDQo=</div>
 
 
 
@@ -1926,7 +1879,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeSourceEmbed("bias_and_variance.Rmd");
+  window.initializeSourceEmbed("optimize_prior_params.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>

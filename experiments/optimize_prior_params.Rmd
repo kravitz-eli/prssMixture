@@ -1,0 +1,218 @@
+---
+title: "R Notebook"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+# Setting prior parameters to get to desired posterior parameters
+
+This is an attempt to find the best parameters of the prior.
+
+My idea is that if  Phase 3 is power at the observed hazard ratio from phase 2 $\text{Prss} \in [0.50, \text{Power}]$ where power refers to power at $\mu_{L}$, the Phase 2 observed hazard ratio, and $n_{E3}$, the Phase 3 sample size.
+
+Assume a normal prior, $N(\mu_P, 4 / n_P)$, and observed likelihood $N(\mu_L, 4 / n_L)$ The posterior distribution is Normal with
++ Mean: $\frac{n_L  \mu_L + n_P \mu_P}{n_L +  n_P}$
++ Variance: $\frac{4}{n_L + n_P}$
+
+What is the most informative set of priors? To me, this turns PrSS into power. Power for Phase 3 can be interpreted in a bayesian sense. $\theta ~ N(\mu{1}, \frac{4}{n_{E3}})$, where $\theta_1$ is the assumed log hazard ratio under $H_1$ for which the Phase 3 trial is powered and $n_{E3}$ is the number of events planned for phase 3. $\text{Power}(\theta_1) = Pr(\theta < \Phi(0.025; 0, \frac{4}{n_{E3}})$
+
+
+## Optimization
+
+We can we find prior parameters that force the posterior parameters to be close to parameters power in power function above? We'll assume we power at the observed Phase 2 HR. We can interpret this as an optimization problem:
+(On second thought this might now work)
+**Minimize** \frac{n_L  \mu_L + n_P \mu_P}{n_L + n_P} - \mu_L
+**Subject to: ** $n_P + n_L = n_{P3}$  
+
+
+An alternative to explore is:
+
+**Minimize** $PrSS - Power$$
+**Subject to: ** $n_P \geq 1$, $\mu \in [-\epsilon, \epsilon]$ (posterior mean close to 0)
+
+Try the first one: !!Dumb. This isn't optimization. This is a nonlinear equation
+```{r}
+library(nloptr) # Look up vignette for help
+
+# Set phase II and phase III parameters
+mu_L <- log(0.5)
+n_L <- 40
+n_P3 <- 88
+
+# function to minimize
+eval_f0 <- function(mu_P, n_P, mu_L, n_L, mu_power) {
+  abs((n_P * mu_P + n_L + mu_L) / (n_P + n_L) - mu_power)
+}
+
+# equality containts
+eval_h <- function(n_P, n_L, n_P3) {
+  n_P3 - (n_P + n_L)
+}
+
+# Run optimization 
+opts <- list(
+  "algorithm"= "NLOPT_GN_ISRES",
+  "xtol_rel" = 1.0e-8,
+  "ftol_abs" = 0.05,
+  "maxeval" = 1e4,
+  "tol_constraints_eq" = 1e-3
+)
+
+f0_wrapper = function(x, mu_L, n_L, mu_power, n_P3){
+  eval_f0(mu_P = x[1], n_P = x[2], mu_L = mu_L, n_L = n_L, mu_power = mu_power)
+  
+  
+  
+}
+
+h_wrapper = function(x, mu_L, n_L, mu_power, n_P3){
+  eq_constr = eval_h(n_P = x[2], n_L = n_L, n_P3 = n_P3)
+  
+  # make it a soft threshold
+  # if the sample size less than 5 different, we're okay
+  ifelse(abs(eq_constr) < 5,  yes = 0, no = 1)
+  
+}
+
+res <- nloptr(
+  c(0, 1),
+  eval_f = f0_wrapper,
+  eval_g_eq = h_wrapper,
+  lb = c(-100, 1),
+  ub = c(100,  n_P3 - n_L),
+  opts = opts,
+  mu_L = mu_L,
+  n_L = n_L,
+  n_P3 = n_P3,
+  mu_power = mu_L
+)
+
+
+opt_n_p = floor(res$solution[2])
+opt_n_mu = res$solution[1]
+
+```
+
+I think I get it: If you want PrSS to match power, you push $n_{prior}$ to $n_{P3} - n_{P2}$ **and** push $\mu_p$ to negative numbers (-infinity?)
+
+
+Try these values with Prss
+
+```{r}
+source(here::here("experiments", "closed_HR_post_univariate.R"))
+
+crit_val <- qnorm(
+  0.025,
+  mean = 0,
+  sd = sqrt(4 / n_P3)
+)
+
+# Get posterior parameters
+post_params = closed_HR_post(
+  prior_N = opt_n_p,
+  prior_mean = opt_n_mu,
+  data_N = n_L,
+  data_mean = log(0.50)
+)
+
+post_mean <- post_params$post_mean # much smaller than I expected
+post_var <- post_params$post_var
+
+# Closed form with normal
+pnorm(crit_val,
+      post_mean,
+      sd = sqrt(post_var))
+
+# Prss Simulation
+theta_samp <- rnorm(100000, post_mean, sqrt(post_var))
+mean(theta_samp < crit_val)
+```
+
+## Try with rootsolving
+
+This should give a posterior that is approximately the same as the Phase III sampling distribution at the value the study is powered at
+
+**Solve**: $\frac{n_L  \mu_L + n_P \mu_P}{n_L + n_P}  =  \mu_L$
+**Subject to: ** $n_P + n_L = n_{P3}$  
+
+You can change what you set the equation equal to if you want to power things differently.
+
+```{r}
+data_mean <- log(0.5)
+data_N <- 40
+phase3_N <- 88
+prior_N = phase3_N - data_N
+
+
+# find_prior_mu = function(mu_P, n_P, n_L, mu_L, target_mu){
+#   (n_P * mu_P + n_L + mu_L) / (n_P + n_L) - target_mu
+# }
+
+find_prior_mu = function(prior_mean, prior_N,  data_N, data_mean, target){
+  (prior_N * prior_mean + data_N * data_mean) / (prior_N + data_N) - target
+}
+
+root = uniroot(
+  find_prior_mu,
+  interval = c(-100, 100),
+  tol = 0.01,
+  prior_N = prior_N,
+  data_N = data_N,
+  data_mean = data_mean,
+  target = log(0.5)
+)
+
+prior_mean = root$root
+
+
+post_params = closed_HR_post(
+  prior_N = prior_N,
+  prior_mean = prior_mean,
+  data_N = data_N,
+  data_mean = data_mean
+)
+
+post_mean = post_params$post_mean
+post_var = post_params$post_var
+
+# Get sampling distribution under H1 out of the code below
+crit_val <- qnorm(
+  0.025,
+  mean = 0,
+  sd = sqrt(4 / phase3_N)
+)
+
+
+
+
+
+
+
+```
+
+
+# Make prior sample size depend on likelihood sample size
+
+```{r}
+
+prior_N_as_likelihood_N = function(n_I, n_L){
+  
+  
+  weight = n_L^(1/2) / (n_L^(1/2) + 1)
+  
+  weight * n_I + (1 - weight)
+  
+}
+
+
+data_N <- 40
+phase3_N <- 88
+prior_I = phase3_N - data_N
+
+data_L_seq = seq(1:200)
+prior_N_as_likelihood_N(n_I = prior_I, n_L = data_L_seq) %>% 
+  plot(x = data_L_seq, y = ., ylab = "Prior Sample Size", xlab = "Events in Likelihood" ,
+       type = "l")
+
+```
+

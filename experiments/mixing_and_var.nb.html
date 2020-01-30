@@ -1749,137 +1749,169 @@ summary {
 
 
 <!-- rnb-text-begin -->
+<p>This is an attempt to see at what value of the variance the mixing weights go wrong.</p>
+<p>Set up initial parameters</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Denote the observed log hazard ratio with <span class="math inline">\(\mu_L\)</span> and the number of events observed in Phase 2 as <span class="math inline">\(n_L\)</span></p>
-<ul>
-<li>Likelihood <span class="math inline">\(p(\mu_L | \theta ) = N(\theta, 4 / n_L)\)</span></li>
-<li>Prior <span class="math inline">\(\theta \sim N( \mu_P, 4 / n_P)\)</span></li>
-</ul>
-<p>Then the posterior is <span class="math inline">\(N( \frac{n_L \mu_L + n_P \mu_P}{n_L + n_P}, \frac{4}{n_L + n_P})\)</span>.</p>
-<p>If you use a noninformative prior with <span class="math inline">\(\mu_L = 0\)</span>, your posterior variance is unchanged and your posterior mean is <span class="math inline">\(\frac{n_L \mu_L}{n_L + n_P} = \big( \frac{n_L}{n_L + n_P} \big) \mu_L\)</span>. The bias induced by the prior is <span class="math inline">\(\frac{n_L}{n_L + n_P}\)</span>. There is valid flat prior. The least informative prior sets <span class="math inline">\(n_P = 1\)</span> because it’s like “observing” only a single event. This corresponds to a <span class="math inline">\(N(0, 4).\)</span> Maybe the least informative is <span class="math inline">\(n_P = 2\)</span> because you need a two observations for a hazard ratio. This would be <span class="math inline">\(N(0, 2)\)</span>.</p>
-<p><strong>Note</strong>: A <span class="math inline">\(N(0, 4)\)</span> is actually really, really noninformation for log hazard. Most of the mass is between -2 and 2 on the log scale which translates to a hazard ratio of 0.14 to 7.4. If you saw either of these hazard ratios, you would have cured cancer.</p>
-<p>!! Distribution of hazards (not log!), looks too peaked at 0 for it to be uninformative.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Look at “influence” (bias of the observed likelihood) when you keep prior sample size fixed</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubl9QID0gMzBcbm5fTCA9IHNlcSgxLCAzMDApXG5cbmJpYXMgPSBuX0wgLyAobl9MICsgbl9QKVxuXG5wbG90KHggPSBuX0wsIHkgPSBiaWFzLFxuICAgICB0eXBlID0gXCJsXCIsXG4gICAgIG1haW4gPSBcIkJpYXMgYXMgbl9QIGZpeGVkIGF0IDMwLCBuX0wgaW5jcmVhc2VzXCIsXG4gICAgIHhsYWIgID0gXCJuX0wgKExpa2VsaWhvb2QgZXZlbnRzKVwiLFxuICAgICB5bGFiID0gXCJiaWFzIG9mIGxpa2VsaWhvb2QgbWVhblwiKVxuYGBgIn0= -->
-<pre class="r"><code>n_P = 30
-n_L = seq(1, 300)
-
-bias = n_L / (n_L + n_P)
-
-plot(x = n_L, y = bias,
-     type = &quot;l&quot;,
-     main = &quot;Bias as n_P fixed at 30, n_L increases&quot;,
-     xlab  = &quot;n_L (Likelihood events)&quot;,
-     ylab = &quot;bias of likelihood mean&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Look at “influence” (bias of the observed likelihood) when you fix likelihood sample size and increase prior sample size</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubl9QID0gc2VxKDEsIDMwMCkgXG5uX0wgPSAzMFxuXG5iaWFzID0gbl9MIC8gKG5fUCArIG5fTClcblxucGxvdCh4ID0gbl9QLCB5ID0gYmlhcyxcbiAgICAgdHlwZSA9IFwibFwiLFxuICAgICBtYWluID0gXCJCaWFzIGFzIG5fTCBmaXhlZCBhdCAzMCwgbl9QIGluY3JlYXNlc1wiLFxuICAgICB4bGFiICA9IFwibl9QIChwcmlvciBzYW1wbGUgc2l6ZSlcIixcbiAgICAgeWxhYiA9IFwiYmlhcyBvZiBsaWtlbGlob29kIG1lYW5cIilcbmBgYCJ9 -->
-<pre class="r"><code>n_P = seq(1, 300) 
-n_L = 30
-
-bias = n_L / (n_P + n_L)
-
-plot(x = n_P, y = bias,
-     type = &quot;l&quot;,
-     main = &quot;Bias as n_L fixed at 30, n_P increases&quot;,
-     xlab  = &quot;n_P (prior sample size)&quot;,
-     ylab = &quot;bias of likelihood mean&quot;)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<div id="can-we-find-a-good-balance-of-likelihood-sample-size-and-emperical-sample-size" class="section level2">
-<h2>Can we find a good balance of likelihood sample size and emperical sample size</h2>
-<p>!!Doesn’t really work</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBhIDwgYlxucmF0ZV9uX1AgPSBmdW5jdGlvbihuX0wsIGEsIGIpe1xuICBcbiAgKG5fTF5hICsgMykgLyAobl9MXmIgLSAxKVxuICBcbiAgXG59XG5cbmN1cnZlKFxuICByYXRlX25fUCh4LCA4LCAxMCksIFxuICBmcm9tID0gMCwgXG4gIHRvID0gMjAsXG4gIHhsYWIgPSBcIm5fTCAobGlrZWxpaG9vZCBzYW1wbGUpXCIsXG4gIHlsYWIgPSBcIm5fUCAocHJpb3Igc2FtcGxlKVwiXG4pXG5cblxuYGBgIn0= -->
-<pre class="r"><code># a &lt; b
-rate_n_P = function(n_L, a, b){
-  
-  (n_L^a + 3) / (n_L^b - 1)
-  
-  
-}
-
-curve(
-  rate_n_P(x, 8, 10), 
-  from = 0, 
-  to = 20,
-  xlab = &quot;n_L (likelihood sample)&quot;,
-  ylab = &quot;n_P (prior sample)&quot;
-)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuamFnc19yZXN1bHRzIDwtIHJ1bl9qYWdzKFxuICBtb2RlbF9maWxlID0gXCJ1bml2YXJpYXRlX25vcm1hbF9taXh0dXJlXCIsXG4gIGRhdGEgPSBkYXRhLFxuICB0cmFja192YXJpYWJsZV9uYW1lcyA9IGMoXCJ0aGV0YVwiLCBcImluZFwiKSxcbiAgaXRlciA9IDFlNSxcbiAgYnVybiA9IDFlMyxcbiAgY2hhaW5zID0gMSxcbiAgcHJvZ3Jlc3MuYmFyID0gXCJ0ZXh0XCIpXG5cbmBgYCJ9 -->
+<pre class="r"><code>jags_results &lt;- run_jags(
+  model_file = &quot;univariate_normal_mixture&quot;,
+  data = data,
+  track_variable_names = c(&quot;theta&quot;, &quot;ind&quot;),
+  iter = 1e5,
+  burn = 1e3,
+  chains = 1,
+  progress.bar = &quot;text&quot;)
 </code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-</div>
-<div id="lmits-to-noninformative-approaching-power-distribution" class="section level1">
-<h1>Lmits to noninformative: Approaching power distribution</h1>
-<p>My own conjecture: <span class="math inline">\(\text{Prss} \leq \text{Power}\)</span>, unless there is a very compeling reason to think otherwise.</p>
-<p>Let’s say the Phase III study is power at what is observed in Phase II. It should’t but pretend it is. Call this <span class="math inline">\(\theta_1\)</span></p>
-<p>The Frequentist power calculate can be thought of in a Bayesian way: Suppose <span class="math inline">\(\theta ~ N(\theta_{1}, \frac{4}{n_{E3}})\)</span>, where <span class="math inline">\(\theta_1\)</span> is the assumed log hazard ratio under <span class="math inline">\(H_1\)</span> for which the Phase 3 trial is powered and <span class="math inline">\(n_{E3}\)</span> is the number of events planned for phase 3. <span class="math inline">\(\text{Power}(\theta_1) = Pr(\theta &lt; \Phi(0.025; 0, \frac{4}{n_{E3}})\)</span></p>
-<p>We can make a prior that forces the posterior to get close to this + Likelihood <span class="math inline">\(p(\mu_L | \theta ) = N(\theta, 4 / n_{E2})\)</span>, where <span class="math inline">\(\mu_L\)</span> is the observed Phase II log hazard ratio, <span class="math inline">\(n_{E2}\)</span> are the number of events from phase 2 + Prior: <span class="math inline">\(\theta \sim N\{ 0, 4 / (n_{E3} - n_{E2}\}\)</span> + Posterior: <span class="math inline">\(N( \mu_L * \frac{ n_{E2} }{ n_{E3} } , \frac{4}{n_{E3}})\)</span></p>
-<p>This is <em>close</em> to the power function, expect the mean is different. It is biased downwards when the planned events in phase 3 sample are larger than in phase 2 – <span class="math inline">\(n_{E3} &gt; n_{E2}\)</span> – which will generally always be the case.</p>
-<p>Run a simulation to see if I get power back out of this. EAST says that with 88 planned events, a log hazard ratio of <span class="math inline">\(\log(0.5)\)</span> has power around <span class="math inline">\(0.90\)</span> at <span class="math inline">\(\alpha = 0.025\)</span></p>
-<p>Start with frequentist power</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBTZXQgY29uc3RhbnRzXG50aGV0YV8wID0gbG9nKDEpICMgbnVsbFxudGhldGFfMSA9IGxvZygwLjUpICAjYWx0ZXJuYXRpdmUgXG5uX1AzID0gODggIyBwaGFzZSAzIGV2ZW50cyBcbmFscGhhID0gMC4wMjUgIyBUeXBlIDEgZXJyb3JcblxuIyBHZXQgdGhlIHJlamVjdGlvbiByZWdpb24gLyBjcml0aWNhbCB2YWx1ZVxuY3JpdF92YWwgPSBxbm9ybShhbHBoYSxcbiAgICAgICAgICAgICAgICAgbWVhbiA9IHRoZXRhXzAsXG4gICAgICAgICAgICAgICAgIHNkID0gc3FydCg0IC8gbl9QMykpXG5cbiMgQ2FsY3VsYXRlIHBvd2VyXG4jIHByb2JhYmlsaXR5IGEgTih0aGV0YV8xLCBzaWdtYV4yKSA8IGNyaXRpY2FsIHZhbHVlXG5wbm9ybShjcml0X3ZhbCxcbiAgICAgIG1lYW4gPSB0aGV0YV8xLFxuICAgICAgc2QgPSBzcXJ0KDQvODgpKVxuYGBgIn0= -->
-<pre class="r"><code># Set constants
-theta_0 = log(1) # null
-theta_1 = log(0.5)  #alternative 
-n_P3 = 88 # phase 3 events 
-alpha = 0.025 # Type 1 error
-
-# Get the rejection region / critical value
-crit_val = qnorm(alpha,
-                 mean = theta_0,
-                 sd = sqrt(4 / n_P3))
-
-# Calculate power
-# probability a N(theta_1, sigma^2) &lt; critical value
-pnorm(crit_val,
-      mean = theta_1,
-      sd = sqrt(4/88))</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<p>Check prior sample size theory. !! Doesn’t work. Back to drawing board</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBQclNTIGZyb20gbXkgaWRlYVxucG5vcm0oY3JpdF92YWwsXG4gIG1lYW4gPSBwb3N0X21lYW4sXG4gIHNkID0gc3FydChwb3N0X3ZhcilcbilcblxuYGBgIn0= -->
-<pre class="r"><code># PrSS from my idea
-pnorm(crit_val,
-  mean = post_mean,
-  sd = sqrt(post_var)
-)
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDAuMTk3MjEzMVxuIn0= -->
-<pre><code>[1] 0.1972131</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgMCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICAyJVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgIDQlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAgNiVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgICA4JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTAlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAxMiVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDE0JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMTYlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAxOCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDIwJVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMjIlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAyNCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDI2JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMjglXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAzMCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDMyJVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgMzQlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICAzNiVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDM4JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNDAlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgICB8ICA0MiVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDQ0JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICAgfCAgNDYlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgICB8ICA0OCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgIHwgIDUwJVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICAgfCAgNTIlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgICB8ICA1NCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgIHwgIDU2JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICAgfCAgNTglXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgICB8ICA2MCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgIHwgIDYyJVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICAgfCAgNjQlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgICB8ICA2NiVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgIHwgIDY4JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICAgfCAgNzAlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgICB8ICA3MiVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgIHwgIDc0JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICAgfCAgNzYlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgICB8ICA3OCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgIHwgIDgwJVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICAgfCAgODIlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgICB8ICA4NCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgIHwgIDg2JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICAgfCAgODglXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgICB8ICA5MCVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgIHwgIDkyJVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICAgfCAgOTQlXG4gIHwgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFxuICB8KioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqICB8ICA5NiVcbiAgfCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgXG4gIHwqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqIHwgIDk4JVxuICB8ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgfCoqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqKioqfCAxMDAlXG4ifQ== -->
+<pre><code>
+  |                                                        
+  |                                                  |   0%
+  |                                                        
+  |*                                                 |   2%
+  |                                                        
+  |**                                                |   4%
+  |                                                        
+  |***                                               |   6%
+  |                                                        
+  |****                                              |   8%
+  |                                                        
+  |*****                                             |  10%
+  |                                                        
+  |******                                            |  12%
+  |                                                        
+  |*******                                           |  14%
+  |                                                        
+  |********                                          |  16%
+  |                                                        
+  |*********                                         |  18%
+  |                                                        
+  |**********                                        |  20%
+  |                                                        
+  |***********                                       |  22%
+  |                                                        
+  |************                                      |  24%
+  |                                                        
+  |*************                                     |  26%
+  |                                                        
+  |**************                                    |  28%
+  |                                                        
+  |***************                                   |  30%
+  |                                                        
+  |****************                                  |  32%
+  |                                                        
+  |*****************                                 |  34%
+  |                                                        
+  |******************                                |  36%
+  |                                                        
+  |*******************                               |  38%
+  |                                                        
+  |********************                              |  40%
+  |                                                        
+  |*********************                             |  42%
+  |                                                        
+  |**********************                            |  44%
+  |                                                        
+  |***********************                           |  46%
+  |                                                        
+  |************************                          |  48%
+  |                                                        
+  |*************************                         |  50%
+  |                                                        
+  |**************************                        |  52%
+  |                                                        
+  |***************************                       |  54%
+  |                                                        
+  |****************************                      |  56%
+  |                                                        
+  |*****************************                     |  58%
+  |                                                        
+  |******************************                    |  60%
+  |                                                        
+  |*******************************                   |  62%
+  |                                                        
+  |********************************                  |  64%
+  |                                                        
+  |*********************************                 |  66%
+  |                                                        
+  |**********************************                |  68%
+  |                                                        
+  |***********************************               |  70%
+  |                                                        
+  |************************************              |  72%
+  |                                                        
+  |*************************************             |  74%
+  |                                                        
+  |**************************************            |  76%
+  |                                                        
+  |***************************************           |  78%
+  |                                                        
+  |****************************************          |  80%
+  |                                                        
+  |*****************************************         |  82%
+  |                                                        
+  |******************************************        |  84%
+  |                                                        
+  |*******************************************       |  86%
+  |                                                        
+  |********************************************      |  88%
+  |                                                        
+  |*********************************************     |  90%
+  |                                                        
+  |**********************************************    |  92%
+  |                                                        
+  |***********************************************   |  94%
+  |                                                        
+  |************************************************  |  96%
+  |                                                        
+  |************************************************* |  98%
+  |                                                        
+  |**************************************************| 100%</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
-<p>See how PrSS changes with prior sample size. This is more complicated than I initially thought.</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-chunk-end -->
-</div>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBWYXJpYW5jZSB0byB0cnlcbnZhcl9zZXEgPC0gYyhcbiAgc2VxKDAuMSwgMiwgYnkgPSAwLjEpLFxuICBzZXEoMTAsIDUwLCBieSA9IDEwKVxuKVxuXG4jIEVmZmVjdGl2ZSBzYW1wbGUgc2l6ZSB0byB0cnlcbkVTU19zZXEgPSA0IC8gdmFyX3NlcVxucF9wb3N0ID0gdmVjdG9yKFwibnVtZXJpY1wiLCBsZW5ndGggPSBsZW5ndGgodmFyX3NlcSkpXG5cbmZvcihpIGluIHNlcV9hbG9uZyh2YXJfc2VxKSkge1xuICBcbiAgZGF0YVtbXCJzaWdtYV8xXCJdXSA9IGRhdGFbW1wic2lnbWFfMlwiXV0gPSB2YXJfc2VxW1tpXV1cbiAgXG4gIGphZ3NfcmVzdWx0cyA8LSBydW5famFncyhcbiAgbW9kZWxfZmlsZSA9IFwidW5pdmFyaWF0ZV9ub3JtYWxfbWl4dHVyZVwiLFxuICBkYXRhID0gZGF0YSxcbiAgdHJhY2tfdmFyaWFibGVfbmFtZXMgPSBjKFwidGhldGFcIiwgXCJpbmRcIiksXG4gIGl0ZXIgPSAxZTUsXG4gIGJ1cm4gPSAxZTMsXG4gIGNoYWlucyA9IDEsXG4gIHByb2dyZXNzLmJhciA9IFwidGV4dFwiKVxuICBcbiAgXG4gIHBfcG9zdFtbaV1dID0gY29sTWVhbnMoYXMubWF0cml4KGphZ3NfcmVzdWx0c1ssIFwiaW5kXCJdKSlcbiAgXG59XG5cblxucGxvdCh4ID0gRVNTX3NlcSwgeSA9IHBfcG9zdClcbiAgXG4gIFxuYGBgIn0= -->
+<pre class="r"><code># Variance to try
+var_seq &lt;- c(
+  seq(0.1, 2, by = 0.1),
+  seq(10, 50, by = 10)
+)
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCmVkaXRvcl9vcHRpb25zOiANCiAgY2h1bmtfb3V0cHV0X3R5cGU6IGlubGluZQ0KLS0tDQoNCmBgYHtyIHNldHVwLCBlY2hvID0gRkFMU0V9DQpsaWJyYXJ5KHB1cnJyKQ0KIyBMb2FkIGZ1bmN0aW9uIHRvIGNhbGN1bGF0ZSBwb3N0ZXJpb3INCnNvdXJjZShoZXJlOjpoZXJlKCJleHBlcmltZW50cyIsICJjbG9zZWRfSFJfcG9zdF91bml2YXJpYXRlLlIiKSkNCmBgYA0KDQoNCkRlbm90ZSB0aGUgb2JzZXJ2ZWQgbG9nIGhhemFyZCByYXRpbyB3aXRoICRcbXVfTCQgYW5kIHRoZSBudW1iZXIgb2YgZXZlbnRzIG9ic2VydmVkIGluIFBoYXNlIDIgYXMgJG5fTCQNCg0KKyBMaWtlbGlob29kICRwKFxtdV9MIHwgXHRoZXRhICkgPSBOKFx0aGV0YSwgNCAvIG5fTCkkIA0KKyBQcmlvciAkXHRoZXRhIFxzaW0gTiggXG11X1AsIDQgLyBuX1ApJA0KDQpUaGVuIHRoZSBwb3N0ZXJpb3IgaXMgJE4oIFxmcmFje25fTCAgXG11X0wgKyBuX1AgXG11X1B9e25fTCArIG5fUH0sIFxmcmFjezR9e25fTCArIG5fUH0pJC4NCg0KDQpJZiB5b3UgdXNlIGEgbm9uaW5mb3JtYXRpdmUgcHJpb3Igd2l0aCAkXG11X0wgPSAwJCwgeW91ciBwb3N0ZXJpb3IgdmFyaWFuY2UgaXMgdW5jaGFuZ2VkIGFuZCB5b3VyIHBvc3RlcmlvciBtZWFuIGlzICRcZnJhY3tuX0wgIFxtdV9MfXtuX0wgKyBuX1B9ID0gXGJpZyggXGZyYWN7bl9MfXtuX0wgKyBuX1B9IFxiaWcpIFxtdV9MJC4gVGhlIGJpYXMgaW5kdWNlZCBieSB0aGUgcHJpb3IgaXMgJFxmcmFje25fTH17bl9MICsgbl9QfSQuIFRoZXJlIGlzIHZhbGlkIGZsYXQgcHJpb3IuIFRoZSBsZWFzdCBpbmZvcm1hdGl2ZSBwcmlvciBzZXRzICRuX1AgPSAxJCBiZWNhdXNlIGl0J3MgbGlrZSAib2JzZXJ2aW5nIiBvbmx5IGEgc2luZ2xlIGV2ZW50LiBUaGlzIGNvcnJlc3BvbmRzIHRvIGEgJE4oMCwgNCkuJCBNYXliZSB0aGUgbGVhc3QgaW5mb3JtYXRpdmUgaXMgJG5fUCA9IDIkIGJlY2F1c2UgeW91IG5lZWQgYSB0d28gb2JzZXJ2YXRpb25zIGZvciBhIGhhemFyZCByYXRpby4gVGhpcyB3b3VsZCBiZSAkTigwLCAyKSQuDQoNCioqTm90ZSoqOiBBICROKDAsIDQpJCBpcyBhY3R1YWxseSByZWFsbHksIHJlYWxseSBub25pbmZvcm1hdGlvbiBmb3IgbG9nIGhhemFyZC4gTW9zdCBvZiB0aGUgbWFzcyBpcyBiZXR3ZWVuIC0yIGFuZCAyIG9uIHRoZSBsb2cgc2NhbGUgd2hpY2ggdHJhbnNsYXRlcyB0byBhIGhhemFyZCByYXRpbyBvZiAwLjE0IHRvIDcuNC4gSWYgeW91IHNhdyBlaXRoZXIgb2YgdGhlc2UgaGF6YXJkIHJhdGlvcywgeW91IHdvdWxkIGhhdmUgY3VyZWQgY2FuY2VyLg0KDQohISBEaXN0cmlidXRpb24gb2YgaGF6YXJkcyAobm90IGxvZyEpLCBsb29rcyB0b28gcGVha2VkIGF0IDAgZm9yIGl0IHRvIGJlIHVuaW5mb3JtYXRpdmUuIA0KYGBge3IgZWNobyA9IEZBTFNFfQ0KDQpjdXJ2ZShkbm9ybSh4LCAwLCBzZCA9IHNxcnQoNCkpLCBmcm9tID0gLTYsIHRvID0gNiwgDQogICAgICBtYWluID0gIlByb2JhYmlsaXR5IG9mIExvZyBIYXphcmQgUmF0aW9zIiwNCiAgICAgIHhsYWIgPSAiSGF6YXJkIFJhdGlvIiwNCiAgICAgIHlsYWIgPSAiRGVuc2l0eSIsDQogICAgICBsd2QgPSAyKQ0KDQoNCnNhbXBsZXMgPSBybm9ybSgxMDAwMCwgMCwgc3FydCg0KSkNCg0KaGlzdChleHAoc2FtcGxlcykpDQoNCmN1cnZlKA0KICBkbG5vcm0oeCwgbWVhbmxvZyAgPSAxLA0KICAgICAgICAgc2Rsb2cgPSBzcXJ0KDQpKSwNCiAgZnJvbSA9IDAsDQogIHRvID0gNCwNCiAgbWFpbiA9ICJQcm9iYWJpbGl0eSBvZiBIYXphcmQgUmF0aW9zIChub3QgbG9nKSIsDQogIHhsYWIgPSAiSGF6YXJkIFJhdGlvIiwNCiAgeWxhYiA9ICJEZW5zaXR5IiwNCiAgbHdkID0gMg0KKQ0KDQoNCg0KYGBgDQoNCg0KTG9vayBhdCAiaW5mbHVlbmNlIiAoYmlhcyBvZiB0aGUgb2JzZXJ2ZWQgbGlrZWxpaG9vZCkgd2hlbiB5b3Uga2VlcCBwcmlvciBzYW1wbGUgc2l6ZSBmaXhlZA0KYGBge3J9DQpuX1AgPSAzMA0Kbl9MID0gc2VxKDEsIDMwMCkNCg0KYmlhcyA9IG5fTCAvIChuX0wgKyBuX1ApDQoNCnBsb3QoeCA9IG5fTCwgeSA9IGJpYXMsDQogICAgIHR5cGUgPSAibCIsDQogICAgIG1haW4gPSAiQmlhcyBhcyBuX1AgZml4ZWQgYXQgMzAsIG5fTCBpbmNyZWFzZXMiLA0KICAgICB4bGFiICA9ICJuX0wgKExpa2VsaWhvb2QgZXZlbnRzKSIsDQogICAgIHlsYWIgPSAiYmlhcyBvZiBsaWtlbGlob29kIG1lYW4iKQ0KYGBgDQoNCkxvb2sgYXQgImluZmx1ZW5jZSIgKGJpYXMgb2YgdGhlIG9ic2VydmVkIGxpa2VsaWhvb2QpIHdoZW4geW91IGZpeCBsaWtlbGlob29kIHNhbXBsZSBzaXplIGFuZCBpbmNyZWFzZSBwcmlvciBzYW1wbGUgc2l6ZQ0KYGBge3J9DQpuX1AgPSBzZXEoMSwgMzAwKSANCm5fTCA9IDMwDQoNCmJpYXMgPSBuX0wgLyAobl9QICsgbl9MKQ0KDQpwbG90KHggPSBuX1AsIHkgPSBiaWFzLA0KICAgICB0eXBlID0gImwiLA0KICAgICBtYWluID0gIkJpYXMgYXMgbl9MIGZpeGVkIGF0IDMwLCBuX1AgaW5jcmVhc2VzIiwNCiAgICAgeGxhYiAgPSAibl9QIChwcmlvciBzYW1wbGUgc2l6ZSkiLA0KICAgICB5bGFiID0gImJpYXMgb2YgbGlrZWxpaG9vZCBtZWFuIikNCmBgYA0KDQoNCiMjIENhbiB3ZSBmaW5kIGEgZ29vZCBiYWxhbmNlIG9mIGxpa2VsaWhvb2Qgc2FtcGxlIHNpemUgYW5kIGVtcGVyaWNhbCBzYW1wbGUgc2l6ZQ0KISFEb2Vzbid0IHJlYWxseSB3b3JrDQpgYGB7cn0NCiMgYSA8IGINCnJhdGVfbl9QID0gZnVuY3Rpb24obl9MLCBhLCBiKXsNCiAgDQogIChuX0xeYSArIDMpIC8gKG5fTF5iIC0gMSkNCiAgDQogIA0KfQ0KDQpjdXJ2ZSgNCiAgcmF0ZV9uX1AoeCwgOCwgMTApLCANCiAgZnJvbSA9IDAsIA0KICB0byA9IDIwLA0KICB4bGFiID0gIm5fTCAobGlrZWxpaG9vZCBzYW1wbGUpIiwNCiAgeWxhYiA9ICJuX1AgKHByaW9yIHNhbXBsZSkiDQopDQoNCg0KYGBgDQoNCg0KIyBMbWl0cyB0byBub25pbmZvcm1hdGl2ZTogQXBwcm9hY2hpbmcgcG93ZXIgZGlzdHJpYnV0aW9uDQoNCk15IG93biBjb25qZWN0dXJlOiAkXHRleHR7UHJzc30gXGxlcSBcdGV4dHtQb3dlcn0kLCB1bmxlc3MgdGhlcmUgaXMgYSB2ZXJ5IGNvbXBlbGluZyByZWFzb24gdG8gdGhpbmsgb3RoZXJ3aXNlLiANCg0KTGV0J3Mgc2F5IHRoZSBQaGFzZSBJSUkgc3R1ZHkgaXMgcG93ZXIgYXQgd2hhdCBpcyBvYnNlcnZlZCBpbiBQaGFzZSBJSS4gSXQgc2hvdWxkJ3QgYnV0IHByZXRlbmQgaXQgaXMuIENhbGwgdGhpcyAkXHRoZXRhXzEkDQoNClRoZSBGcmVxdWVudGlzdCBwb3dlciBjYWxjdWxhdGUgY2FuIGJlIHRob3VnaHQgb2YgaW4gYSBCYXllc2lhbiB3YXk6IFN1cHBvc2UgJFx0aGV0YSB+IE4oXHRoZXRhX3sxfSwgXGZyYWN7NH17bl97RTN9fSkkLCB3aGVyZSAkXHRoZXRhXzEkIGlzIHRoZSBhc3N1bWVkIGxvZyBoYXphcmQgcmF0aW8gdW5kZXIgJEhfMSQgZm9yIHdoaWNoIHRoZSBQaGFzZSAzIHRyaWFsIGlzIHBvd2VyZWQgYW5kICRuX3tFM30kIGlzIHRoZSBudW1iZXIgb2YgZXZlbnRzIHBsYW5uZWQgZm9yIHBoYXNlIDMuICRcdGV4dHtQb3dlcn0oXHRoZXRhXzEpID0gUHIoXHRoZXRhIDwgXFBoaSgwLjAyNTsgMCwgXGZyYWN7NH17bl97RTN9fSkkICANCg0KV2UgY2FuIG1ha2UgYSBwcmlvciB0aGF0IGZvcmNlcyB0aGUgcG9zdGVyaW9yIHRvIGdldCBjbG9zZSB0byB0aGlzDQorIExpa2VsaWhvb2QgJHAoXG11X0wgfCBcdGhldGEgKSA9IE4oXHRoZXRhLCA0IC8gbl97RTJ9KSQsIHdoZXJlICRcbXVfTCQgaXMgdGhlIG9ic2VydmVkIFBoYXNlIElJIGxvZyBoYXphcmQgcmF0aW8sICRuX3tFMn0kIGFyZSB0aGUgbnVtYmVyIG9mIGV2ZW50cyBmcm9tIHBoYXNlIDINCisgUHJpb3I6ICRcdGhldGEgXHNpbSBOXHsgMCwgNCAvIChuX3tFM30gLSBuX3tFMn1cfSQNCisgUG9zdGVyaW9yOiAkTiggXG11X0wgKiBcZnJhY3sgbl97RTJ9IH17IG5fe0UzfSB9ICwgXGZyYWN7NH17bl97RTN9fSkkDQoNClRoaXMgaXMgKmNsb3NlKiB0byB0aGUgcG93ZXIgZnVuY3Rpb24sIGV4cGVjdCB0aGUgbWVhbiBpcyBkaWZmZXJlbnQuIEl0IGlzIGJpYXNlZCBkb3dud2FyZHMgd2hlbiB0aGUgcGxhbm5lZCBldmVudHMgaW4gcGhhc2UgMyBzYW1wbGUgYXJlIGxhcmdlciB0aGFuIGluIHBoYXNlIDIgLS0gJG5fe0UzfSA+IG5fe0UyfSQgLS0gd2hpY2ggd2lsbCBnZW5lcmFsbHkgYWx3YXlzIGJlIHRoZSBjYXNlLg0KDQpSdW4gYSBzaW11bGF0aW9uIHRvIHNlZSBpZiBJIGdldCBwb3dlciBiYWNrIG91dCBvZiB0aGlzLiBFQVNUIHNheXMgdGhhdCB3aXRoIDg4IHBsYW5uZWQgZXZlbnRzLCBhIGxvZyBoYXphcmQgcmF0aW8gb2YgJFxsb2coMC41KSQgaGFzIHBvd2VyIGFyb3VuZCAkMC45MCQgYXQgJFxhbHBoYSA9IDAuMDI1JA0KDQpTdGFydCB3aXRoIGZyZXF1ZW50aXN0IHBvd2VyDQpgYGB7cn0NCiMgU2V0IGNvbnN0YW50cw0KdGhldGFfMCA9IGxvZygxKSAjIG51bGwNCnRoZXRhXzEgPSBsb2coMC41KSAgI2FsdGVybmF0aXZlIA0Kbl9QMyA9IDg4ICMgcGhhc2UgMyBldmVudHMgDQphbHBoYSA9IDAuMDI1ICMgVHlwZSAxIGVycm9yDQoNCiMgR2V0IHRoZSByZWplY3Rpb24gcmVnaW9uIC8gY3JpdGljYWwgdmFsdWUNCmNyaXRfdmFsID0gcW5vcm0oYWxwaGEsDQogICAgICAgICAgICAgICAgIG1lYW4gPSB0aGV0YV8wLA0KICAgICAgICAgICAgICAgICBzZCA9IHNxcnQoNCAvIG5fUDMpKQ0KDQojIENhbGN1bGF0ZSBwb3dlcg0KIyBwcm9iYWJpbGl0eSBhIE4odGhldGFfMSwgc2lnbWFeMikgPCBjcml0aWNhbCB2YWx1ZQ0KcG5vcm0oY3JpdF92YWwsDQogICAgICBtZWFuID0gdGhldGFfMSwNCiAgICAgIHNkID0gc3FydCg0Lzg4KSkNCmBgYA0KDQpDaGVjayBwcmlvciBzYW1wbGUgc2l6ZSB0aGVvcnkuICEhIERvZXNuJ3Qgd29yay4gQmFjayB0byBkcmF3aW5nIGJvYXJkDQoNCmBgYHtyfQ0KDQojIFBoYXNlIDIgaW5mbw0Kbl9QMiA8LSAzMA0KSFJfb2JzIDwtIGxvZygwLjUwKQ0KDQojIFBoYXNlIDMgaW5mbw0Kbl9QMyA8LSA4OA0KY3JpdF92YWwgPC0gcW5vcm0oYWxwaGEsDQogICAgICAgICAgICAgICAgICBtZWFuID0gdGhldGFfMCwNCiAgICAgICAgICAgICAgICAgIHNkID0gc3FydCg0IC8gbl9QMykNCikNCg0KIyBQcmlvciBpbmZvDQpwcmlvcl9tZWFuIDwtIDANCm5fcHJpb3IgPC0gbl9QMyAtIG5fUDINCg0KIyBDYWxjdWxhdGUgcG9zdGVyaW9yDQpwb3N0X3BhcmFtcyA8LSBjbG9zZWRfSFJfcG9zdCgNCiAgZGF0YV9OID0gbl9QMiwNCiAgZGF0YV9tZWFuID0gSFJfb2JzLA0KICBwcmlvcl9OID0gbl9QMyAtIG5fUDIsDQogIHByaW9yX21lYW4gPSAwDQopDQoNCnBvc3RfbWVhbiA8LSBwb3N0X3BhcmFtcyRwb3N0X21lYW4gIyBtdWNoIHNtYWxsZXIgdGhhbiBJIGV4cGVjdGVkDQpwb3N0X3ZhciA8LSBwb3N0X3BhcmFtcyRwb3N0X3Zhcg0KDQojIFByU1MgZnJvbSBteSBpZGVhDQpwbm9ybShjcml0X3ZhbCwNCiAgICAgIG1lYW4gPSBwb3N0X21lYW4sDQogICAgICBzZCA9IHNxcnQocG9zdF92YXIpDQopDQoNCiMgUHJzcyBTaW11bGF0aW9uDQp0aGV0YV9zYW1wIDwtIHJub3JtKDEwMDAwLCBwb3N0X21lYW4sIHNxcnQocG9zdF92YXIpKQ0KbWVhbih0aGV0YV9zYW1wIDwgY3JpdF92YWwpDQpgYGANCg0KDQpTZWUgaG93IFByU1MgY2hhbmdlcyB3aXRoIHByaW9yIHNhbXBsZSBzaXplLiBUaGlzIGlzIG1vcmUgY29tcGxpY2F0ZWQgdGhhbiBJIGluaXRpYWxseSB0aG91Z2h0Lg0KDQpgYGB7ciBlY2hvID0gRkFMU0V9DQpwcnNzX25fcHJpb3JfY2hhbmdlIDwtIGZ1bmN0aW9uKG5fcHJpb3IsIG5fUDIsIG5fUDMsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIEhSX29icywgdGhldGFfMCA9IDAsIGFscGhhID0gMC4wMjUpIHsNCiAgY3JpdF92YWwgPC0gcW5vcm0oDQogICAgYWxwaGEsDQogICAgbWVhbiA9IHRoZXRhXzAsDQogICAgc2QgPSBzcXJ0KDQgLyBuX1AzKQ0KICApDQogIA0KICAjIENhbGN1bGF0ZSBwb3N0ZXJpb3INCiAgcG9zdF9wYXJhbXMgPC0gY2xvc2VkX0hSX3Bvc3QoDQogICAgZGF0YV9OID0gbl9QMiwNCiAgICBkYXRhX21lYW4gPSBIUl9vYnMsDQogICAgcHJpb3JfTiA9IG5fcHJpb3IsDQogICAgcHJpb3JfbWVhbiA9IDANCiAgKQ0KICANCiAgcG9zdF9tZWFuIDwtIHBvc3RfcGFyYW1zJHBvc3RfbWVhbiAjIG11Y2ggc21hbGxlciB0aGFuIEkgZXhwZWN0ZWQNCiAgcG9zdF92YXIgPC0gcG9zdF9wYXJhbXMkcG9zdF92YXINCiAgDQogICMgUHJzcyBTaW11bGF0aW9uDQogIHRoZXRhX3NhbXAgPC0gcm5vcm0oMTAwMDAwLCBwb3N0X21lYW4sIHNxcnQocG9zdF92YXIpKQ0KICBtZWFuKHRoZXRhX3NhbXAgPCBjcml0X3ZhbCkNCn0NCg0Kbl9QMiA8LSA0MA0KSFJfb2JzIDwtIGxvZygwLjUpDQpuX1AzIDwtIDg4DQptYXhfbl9wcmlvciA8LSBuX1AzIC0gbl9QMg0KDQpwcnNzIDwtIG1hcF9kYmwoMTptYXhfbl9wcmlvciwgDQogICAgICAgICAgICAgICAgfnByc3Nfbl9wcmlvcl9jaGFuZ2Uobl9wcmlvciA9IC54LCANCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBuX1AyID0gbl9QMiwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBuX1AzID0gbl9QMywgDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgSFJfb2JzID0gSFJfb2JzKQ0KKQ0KDQoNCnBsb3QoeCA9IDE6bWF4X25fcHJpb3IsDQogICAgIHkgPSBwcnNzLCANCiAgICAgdHlwZSA9ICJsIiwNCiAgICAgbHdkID0gMywNCiAgICAgY29sID0gImJsdWUiLA0KICAgICB4bGFiID0gIlBvc3RlcmlvciBTYW1wbGUgU2l6ZSIsDQogICAgIHlsYWIgPSAiUHJTUyIsDQogICAgIHlsaW0gPSBjKDAsIDEpLA0KICAgICBtYWluID0gIlByU1MgYXMgYSBmdW5jdGlvbiBvZiBQb3N0ZXJpb3IgU2FtcGxlIFNpemUiKQ0KYWJsaW5lKGggPSAwLjksIGx0eT0yLCBsd2QgPSAzKQ0KDQpgYGANCg==</div>
+# Effective sample size to try
+ESS_seq = 4 / var_seq
+p_post = vector(&quot;numeric&quot;, length = length(var_seq))
+
+for(i in seq_along(var_seq)) {
+  
+  data[[&quot;sigma_1&quot;]] = data[[&quot;sigma_2&quot;]] = var_seq[[i]]
+  
+  jags_results &lt;- run_jags(
+  model_file = &quot;univariate_normal_mixture&quot;,
+  data = data,
+  track_variable_names = c(&quot;theta&quot;, &quot;ind&quot;),
+  iter = 1e5,
+  burn = 1e3,
+  chains = 1,
+  progress.bar = &quot;text&quot;)
+  
+  
+  p_post[[i]] = colMeans(as.matrix(jags_results[, &quot;ind&quot;]))
+  
+}
+
+
+plot(x = ESS_seq, y = p_post)
+  
+  </code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCmVkaXRvcl9vcHRpb25zOiANCiAgY2h1bmtfb3V0cHV0X3R5cGU6IGlubGluZQ0KLS0tDQoNClRoaXMgaXMgYW4gYXR0ZW1wdCB0byBzZWUgYXQgd2hhdCB2YWx1ZSBvZiB0aGUgdmFyaWFuY2UgdGhlIG1peGluZyB3ZWlnaHRzIGdvIHdyb25nLiANCg0KU2V0IHVwIGluaXRpYWwgcGFyYW1ldGVycw0KYGBge3J9DQpsaWJyYXJ5KGhlcmUpDQpsaWJyYXJ5KG1hZ3JpdHRyKQ0KbGlicmFyeShyamFncykNCnNvdXJjZShoZXJlKCJSIiwgInJ1bl9qYWdzLlIiKSkNCg0KZGF0YSA8LSBsaXN0KA0KICAieSIgPSBsb2coMC43NiksDQogICJzaWdtYV9MIiA9IDEgLyA0OCwNCiAgIndlaWdodCIgPSAwLjUsDQogICJ0aGV0YV8xIiA9IGxvZygwLjUwKSwNCiAgInRoZXRhXzIiICA9IGxvZygxKSwNCiAgInNpZ21hXzEiID0gTkEsICNUaGVzZSB3aWxsIGNoYW5nZQ0KICAic2lnbWFfMiIgPSBOQSAjIFRoZXNlIHdpbGwgY2hhbmdlDQopDQoNCg0KamFnc19yZXN1bHRzIDwtIHJ1bl9qYWdzKA0KICBtb2RlbF9maWxlID0gInVuaXZhcmlhdGVfbm9ybWFsX21peHR1cmUiLA0KICBkYXRhID0gZGF0YSwNCiAgdHJhY2tfdmFyaWFibGVfbmFtZXMgPSBjKCJ0aGV0YSIsICJpbmQiKSwNCiAgaXRlciA9IDFlNSwNCiAgYnVybiA9IDFlMywNCiAgY2hhaW5zID0gMSwNCiAgcHJvZ3Jlc3MuYmFyID0gInRleHQiKQ0KDQpgYGANCg0KDQpgYGB7cn0NCiMgVmFyaWFuY2UgdG8gdHJ5DQp2YXJfc2VxIDwtIGMoDQogIHNlcSgwLjEsIDIsIGJ5ID0gMC4xKSwNCiAgc2VxKDEwLCA1MCwgYnkgPSAxMCkNCikNCg0KIyBFZmZlY3RpdmUgc2FtcGxlIHNpemUgdG8gdHJ5DQpFU1Nfc2VxID0gNCAvIHZhcl9zZXENCnBfcG9zdCA9IHZlY3RvcigibnVtZXJpYyIsIGxlbmd0aCA9IGxlbmd0aCh2YXJfc2VxKSkNCg0KZm9yKGkgaW4gc2VxX2Fsb25nKHZhcl9zZXEpKSB7DQogIA0KICBkYXRhW1sic2lnbWFfMSJdXSA9IGRhdGFbWyJzaWdtYV8yIl1dID0gdmFyX3NlcVtbaV1dDQogIA0KICBqYWdzX3Jlc3VsdHMgPC0gcnVuX2phZ3MoDQogIG1vZGVsX2ZpbGUgPSAidW5pdmFyaWF0ZV9ub3JtYWxfbWl4dHVyZSIsDQogIGRhdGEgPSBkYXRhLA0KICB0cmFja192YXJpYWJsZV9uYW1lcyA9IGMoInRoZXRhIiwgImluZCIpLA0KICBpdGVyID0gMWU1LA0KICBidXJuID0gMWUzLA0KICBjaGFpbnMgPSAxLA0KICBwcm9ncmVzcy5iYXIgPSAidGV4dCIpDQogIA0KICANCiAgcF9wb3N0W1tpXV0gPSBjb2xNZWFucyhhcy5tYXRyaXgoamFnc19yZXN1bHRzWywgImluZCJdKSkNCiAgDQp9DQoNCg0KcGxvdCh4ID0gRVNTX3NlcSwgeSA9IHBfcG9zdCkNCiAgDQogIA0KYGBgDQoNCg==</div>
 
 
 
@@ -1926,7 +1958,7 @@ $(document).ready(function () {
 <!-- code folding -->
 <script>
 $(document).ready(function () {
-  window.initializeSourceEmbed("bias_and_variance.Rmd");
+  window.initializeSourceEmbed("mixing_and_var.Rmd");
   window.initializeCodeFolding("show" === "show");
 });
 </script>
